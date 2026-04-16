@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  name          String
+  avatar        String?
+  role          Role      @default(USER)
+  isActive      Boolean   @default(true)
+  balance       String    @default("{\"BTC\": 0.5, \"ETH\": 5.2, \"USDT\": 2500}")
+  walletAddress String    @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  sentTransactions   Transaction[] @relation("Sender")
+  receivedTransactions Transaction[] @relation("Receiver")
+  auditLogs          AuditLog[]
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  fromUserId  String
+  toUserId    String?
+  fromAddress String
+  toAddress   String
+  amount      Float
+  currency    Currency
+  status      TransactionStatus @default(PENDING)
+  type        TransactionType
+  txHash      String          @unique
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  fromUser User @relation("Sender", fields: [fromUserId], references: [id])
+  toUser   User? @relation("Receiver", fields: [toUserId], references: [id])
+  
+  @@index([fromUserId])
+  @@index([status])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  adminId   String
+  action    String
+  targetId  String
+  details   String   @default("{}")
+  createdAt DateTime @default(now())
+  
+  admin User @relation(fields: [adminId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Currency {
+  BTC
+  ETH
+  USDT
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+enum TransactionType {
+  SEND
+  RECEIVE
+}
