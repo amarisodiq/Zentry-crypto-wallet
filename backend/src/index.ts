@@ -243,4 +243,8 @@ app.get('/api/admin/audit-logs', authenticate, requireAdmin, async (req, res) =>
   res.json(logs);
 });
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.listen(PORT, () => console.log(`🚀 Backend running on http://localhost:${PORT}`));
