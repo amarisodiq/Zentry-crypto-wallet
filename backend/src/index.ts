@@ -9,7 +9,7 @@ import { z } from 'zod';
 
 export const prisma = new PrismaClient();
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT: number = parseInt(process.env.PORT || '5000', 10);
 
 app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));
@@ -102,11 +102,24 @@ app.post('/api/transactions/send', authenticate, async (req: any, res) => {
   if (!validation.success) return res.status(400).json({ error: validation.error.errors[0].message });
   
   const { toAddress, amount, currency } = validation.data;
-  const balance = req.user.balance as any;
+  
+  // FIX: Parse balance if it's a string
+  const balance = typeof req.user.balance === 'string' 
+    ? JSON.parse(req.user.balance) 
+    : req.user.balance;
   
   if (balance[currency] < amount) {
     return res.status(400).json({ error: 'Insufficient balance' });
   }
+  
+  // Deduct balance immediately
+  balance[currency] -= amount;
+  
+  // Update user balance
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: { balance: JSON.stringify(balance) }
+  });
   
   const txHash = `0x${Date.now()}${Math.random().toString(36).substring(2, 10)}`;
   const transaction = await prisma.transaction.create({
@@ -116,13 +129,13 @@ app.post('/api/transactions/send', authenticate, async (req: any, res) => {
       toAddress,
       amount,
       currency,
-      status: 'PENDING',
+      status: 'CONFIRMED', // Auto-confirm for demo
       type: 'SEND',
       txHash
     }
   });
   
-  res.json(transaction);
+  res.json({ transaction, newBalance: balance });
 });
 
 app.get('/api/transactions', authenticate, async (req: any, res) => {
@@ -186,12 +199,15 @@ app.put('/api/admin/transactions/:id/confirm', authenticate, requireAdmin, async
   }
   
   const fromUser = await prisma.user.findUnique({ where: { id: transaction.fromUserId } });
-  const balance = fromUser?.balance as any;
+  const balance = typeof fromUser?.balance === 'string' 
+    ? JSON.parse(fromUser.balance) 
+    : fromUser?.balance;
   balance[transaction.currency] -= transaction.amount;
   
+  // FIX: Stringify balance when updating
   await prisma.user.update({
     where: { id: transaction.fromUserId },
-    data: { balance }
+    data: { balance: JSON.stringify(balance) }
   });
   
   const updated = await prisma.transaction.update({
@@ -243,8 +259,18 @@ app.get('/api/admin/audit-logs', authenticate, requireAdmin, async (req, res) =>
   res.json(logs);
 });
 
+// Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => console.log(`🚀 Backend running on http://localhost:${PORT}`));
+// Root endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: 'Zentry API is running', 
+    version: '1.0.0',
+    status: 'healthy'
+  });
+});
+
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Backend running on port ${PORT}`));
