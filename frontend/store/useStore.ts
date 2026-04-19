@@ -29,12 +29,15 @@ interface Store {
   token: string | null;
   transactions: Transaction[];
   prices: any;
+  isHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
   sendTransaction: (data: any) => Promise<void>;
   fetchTransactions: () => Promise<void>;
   fetchPrices: () => Promise<void>;
+  setHydrated: (state: boolean) => void;
+  hydrate: () => void;
 }
 
 const api = axios.create({ baseURL: process.env.NEXT_PUBLIC_API_URL });
@@ -56,7 +59,6 @@ api.interceptors.response.use(
   }
 );
 
-
 export const useStore = create<Store>()(
   persist(
     (set, get) => ({
@@ -64,6 +66,28 @@ export const useStore = create<Store>()(
       token: null,
       transactions: [],
       prices: {},
+      isHydrated: false,
+      
+      setHydrated: (state) => set({ isHydrated: state }),
+      
+      hydrate: () => {
+        const stored = localStorage.getItem('zentry-storage');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed.state?.user && parsed.state?.token) {
+              set({ 
+                user: parsed.state.user, 
+                token: parsed.state.token,
+                isHydrated: true 
+              });
+            }
+          } catch (e) {
+            console.error('Failed to hydrate:', e);
+          }
+        }
+        set({ isHydrated: true });
+      },
       
       login: async (email, password) => {
         try {
@@ -98,8 +122,14 @@ export const useStore = create<Store>()(
       sendTransaction: async (txData) => {
         try {
           const { data } = await api.post('/transactions/send', txData);
-          set((state) => ({ transactions: [data, ...state.transactions] }));
-          toast.success('Transaction submitted for approval');
+          set((state) => ({ transactions: [data.transaction, ...state.transactions] }));
+          // Update user balance in store
+          if (data.newBalance && get().user) {
+            set((state) => ({
+              user: state.user ? { ...state.user, balance: JSON.stringify(data.newBalance) } : null
+            }));
+          }
+          toast.success('Transaction sent successfully!');
         } catch (error: any) {
           toast.error(error.response?.data?.error || 'Transaction failed');
           throw error;
@@ -117,7 +147,6 @@ export const useStore = create<Store>()(
       
       fetchPrices: async () => {
         try {
-          // Use a CORS proxy or alternative API
           const { data } = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd', {
             headers: {
               'Accept': 'application/json',
@@ -127,11 +156,15 @@ export const useStore = create<Store>()(
           set({ prices: data });
         } catch (error) {
           console.error('Failed to fetch prices:', error);
-          // Set fallback prices
           set({ prices: { bitcoin: { usd: 43250 }, ethereum: { usd: 2250 }, tether: { usd: 1 } } });
         }
       },
     }),
-    { name: 'zentry-storage' }
+    {
+      name: 'zentry-storage',
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated(true);
+      }
+    }
   )
 );
