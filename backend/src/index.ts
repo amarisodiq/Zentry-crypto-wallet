@@ -79,25 +79,23 @@ async function ensureDatabaseHasUsers() {
 // Middleware
 app.use(helmet());
 
-// CORS configuration - allow multiple origins
+// CORS configuration
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5000',
   'https://zentry-crypto-wallet-cugi.vercel.app',
-  'https://zentry-crypto-wallet-cugi-git-main-amarisodiqs-projects.vercel.app',
   'https://zentry-crypto-wallet.vercel.app',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
       console.log('⚠️ CORS blocked origin:', origin);
-      callback(null, true); // Temporarily allow all for testing
+      callback(null, true);
     }
   },
   credentials: true,
@@ -109,8 +107,8 @@ app.use(express.json());
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100
 });
 app.use(limiter);
 
@@ -257,7 +255,6 @@ app.post('/api/transactions/send', authenticate, async (req: any, res) => {
   
   const { toAddress, amount, currency } = validation.data;
   
-  // Parse balance (handle both string and object)
   const balance = typeof req.user.balance === 'string' 
     ? JSON.parse(req.user.balance) 
     : req.user.balance;
@@ -266,16 +263,13 @@ app.post('/api/transactions/send', authenticate, async (req: any, res) => {
     return res.status(400).json({ error: `Insufficient ${currency} balance` });
   }
   
-  // Deduct balance immediately
   balance[currency] -= amount;
   
-  // Update user balance in database
   await prisma.user.update({
     where: { id: req.user.id },
     data: { balance: JSON.stringify(balance) }
   });
   
-  // Create transaction record
   const txHash = `0x${Date.now()}${Math.random().toString(36).substring(2, 10)}`;
   const transaction = await prisma.transaction.create({
     data: {
@@ -353,9 +347,40 @@ app.put('/api/admin/users/:id/toggle-status', authenticate, requireAdmin, async 
   res.json(updated);
 });
 
+app.put('/api/admin/users/:id/role', authenticate, requireAdmin, async (req: any, res) => {
+  const { role } = req.body;
+  const updated = await prisma.user.update({
+    where: { id: req.params.id },
+    data: { role }
+  });
+  res.json(updated);
+});
+
+app.put('/api/admin/users/:id/balance', authenticate, requireAdmin, async (req: any, res) => {
+  const { balance } = req.body;
+  const updated = await prisma.user.update({
+    where: { id: req.params.id },
+    data: { balance: JSON.stringify(balance) }
+  });
+  res.json(updated);
+});
+
+app.delete('/api/admin/users/:id', authenticate, requireAdmin, async (req: any, res) => {
+  await prisma.user.delete({ where: { id: req.params.id } });
+  res.json({ message: 'User deleted' });
+});
+
 app.get('/api/admin/transactions/pending', authenticate, requireAdmin, async (req, res) => {
   const transactions = await prisma.transaction.findMany({
     where: { status: 'PENDING' },
+    orderBy: { createdAt: 'desc' }
+  });
+  res.json(transactions);
+});
+
+app.get('/api/admin/transactions/all', authenticate, requireAdmin, async (req, res) => {
+  const transactions = await prisma.transaction.findMany({
+    include: { fromUser: { select: { name: true, email: true } } },
     orderBy: { createdAt: 'desc' }
   });
   res.json(transactions);
@@ -418,6 +443,20 @@ app.put('/api/admin/transactions/:id/reject', authenticate, requireAdmin, async 
   res.json(updated);
 });
 
+app.put('/api/admin/transactions/:id/edit', authenticate, requireAdmin, async (req: any, res) => {
+  const { amount } = req.body;
+  const updated = await prisma.transaction.update({
+    where: { id: req.params.id },
+    data: { amount }
+  });
+  res.json(updated);
+});
+
+app.delete('/api/admin/transactions/:id', authenticate, requireAdmin, async (req: any, res) => {
+  await prisma.transaction.delete({ where: { id: req.params.id } });
+  res.json({ message: 'Transaction deleted' });
+});
+
 app.get('/api/admin/audit-logs', authenticate, requireAdmin, async (req, res) => {
   const logs = await prisma.auditLog.findMany({
     include: { admin: { select: { name: true, email: true } } },
@@ -429,27 +468,18 @@ app.get('/api/admin/audit-logs', authenticate, requireAdmin, async (req, res) =>
 
 // ==================== UTILITY ENDPOINTS ====================
 
-// Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Root endpoint
 app.get('/', (req, res) => {
   res.status(200).json({ 
     message: 'Zentry API is running', 
     version: '1.0.0',
-    status: 'healthy',
-    endpoints: {
-      auth: '/api/auth/login, /api/auth/register',
-      transactions: '/api/transactions/send, /api/transactions',
-      admin: '/api/admin/stats, /api/admin/users',
-      health: '/health'
-    }
+    status: 'healthy'
   });
 });
 
-// Temporary seed endpoint (remove after first use)
 app.post('/api/seed', async (req, res) => {
   try {
     const adminExists = await prisma.user.findUnique({
@@ -471,34 +501,14 @@ app.post('/api/seed', async (req, res) => {
       });
     }
     
-    const userExists = await prisma.user.findUnique({
-      where: { email: 'user1@zentry.com' }
-    });
-    
-    if (!userExists) {
-      const userPassword = await bcrypt.hash('user123', 10);
-      await prisma.user.create({
-        data: {
-          email: 'user1@zentry.com',
-          password: userPassword,
-          name: 'Test User',
-          walletAddress: '0xuser123456789',
-          balance: JSON.stringify({ BTC: 1.5, ETH: 5.2, USDT: 2500 }),
-          isActive: true
-        }
-      });
-    }
-    
-    res.json({ message: 'Database seeded successfully! Users are ready.' });
+    res.json({ message: 'Database seeded successfully!' });
   } catch (error) {
-    console.error('Seed error:', error);
     res.status(500).json({ error: 'Failed to seed database' });
   }
 });
 
 // ==================== START SERVER ====================
 
-// Initialize database and start server
 async function startServer() {
   await ensureDatabaseHasUsers();
   app.listen(PORT, '0.0.0.0', () => {

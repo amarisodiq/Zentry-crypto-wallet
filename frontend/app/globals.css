@@ -4,8 +4,8 @@
 
 @layer base {
   body {
-    @apply bg-gray-900;
-    -webkit-tap-highlight-color: transparent;
+    @apply bg-black text-white;
+    font-family: system-ui, -apple-system, 'Inter', sans-serif;
   }
 }
 
@@ -16,17 +16,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #1f2937;
-  border-radius: 10px;
+  background: #1a1a1a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: #333;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+  background: #444;
 }
 
 /* Remove number input arrows */
@@ -45,31 +44,24 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Better touch targets for mobile */
+/* Better touch targets */
 button, 
-a,
-[role="button"] {
+a {
   cursor: pointer;
   touch-action: manipulation;
 }
 
-/* Prevent zoom on input focus on iOS */
-input,
-textarea,
-select {
-  font-size: 16px;
+/* Glass effect */
+.glass {
+  background: rgba(18, 18, 18, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Loading animation */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-pulse-slow {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #fff 0%, #666 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

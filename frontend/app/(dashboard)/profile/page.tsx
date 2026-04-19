@@ -1,85 +1,106 @@
 'use client';
-import { useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { motion } from 'framer-motion';
-import { User, Mail, Wallet, Edit2 } from 'lucide-react';
+import { Mail, Wallet, Copy, Check, LogOut } from 'lucide-react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Clock } from 'lucide-react';
 
 export default function ProfilePage() {
-  const { user } = useStore();
-  const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(user?.name || '');
+  const { user, logout } = useStore();
+  const router = useRouter();
+  const [copied, setCopied] = useState(false);
   
-  const handleUpdateProfile = async () => {
-    // In a real app, this would call an API
-    toast.success('Profile updated (demo)');
-    setIsEditing(false);
+  const copyAddress = () => {
+    navigator.clipboard.writeText(user?.walletAddress || '');
+    setCopied(true);
+    toast.success('Address copied!');
+    setTimeout(() => setCopied(false), 2000);
+  };
+  
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black p-8">
-      <div className="max-w-2xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700"
-        >
-          <div className="text-center mb-8">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl text-white font-bold">
-                {user?.name?.[0]?.toUpperCase()}
-              </span>
-            </div>
-            {isEditing ? (
-              <div className="flex items-center justify-center gap-2">
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-1 text-white text-xl font-semibold text-center"
-                />
-                <button
-                  onClick={handleUpdateProfile}
-                  className="px-4 py-1 bg-blue-600 rounded-lg text-white text-sm"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="px-4 py-1 bg-gray-700 rounded-lg text-white text-sm"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center gap-2">
-                <h2 className="text-2xl font-bold text-white">{user?.name}</h2>
-                <button onClick={() => setIsEditing(true)}>
-                  <Edit2 className="w-4 h-4 text-gray-400 hover:text-white" />
-                </button>
-              </div>
-            )}
-            <p className="text-gray-400 mt-1">{user?.role}</p>
+    <div className="min-h-screen bg-black pb-20">
+      <div className="max-w-md mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl text-white font-bold">
+              {user?.name?.[0]?.toUpperCase()}
+            </span>
           </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-4 bg-gray-900 rounded-xl">
+          <h2 className="text-xl font-bold text-white">{user?.name}</h2>
+          <p className="text-gray-500 text-sm mt-1">{user?.role}</p>
+        </div>
+        
+        {/* Info Cards */}
+        <div className="space-y-3 mb-6">
+          <div className="bg-[#1a1a1a] rounded-xl p-4">
+            <div className="flex items-center gap-3">
               <Mail className="w-5 h-5 text-blue-500" />
-              <div>
-                <p className="text-gray-400 text-sm">Email</p>
+              <div className="flex-1">
+                <p className="text-gray-500 text-xs">Email</p>
                 <p className="text-white">{user?.email}</p>
               </div>
             </div>
-            
-            <div className="flex items-center gap-4 p-4 bg-gray-900 rounded-xl">
+          </div>
+          
+          <div className="bg-[#1a1a1a] rounded-xl p-4">
+            <div className="flex items-center gap-3">
               <Wallet className="w-5 h-5 text-purple-500" />
               <div className="flex-1">
-                <p className="text-gray-400 text-sm">Wallet Address</p>
-                <code className="text-white text-sm break-all">{user?.walletAddress}</code>
+                <p className="text-gray-500 text-xs">Wallet Address</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <code className="text-white text-sm font-mono break-all">
+                    {user?.walletAddress}
+                  </code>
+                  <button onClick={copyAddress} className="p-1 hover:opacity-70 transition">
+                    {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
+        
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="w-full bg-red-500/10 border border-red-500/20 rounded-xl py-4 text-red-500 font-medium flex items-center justify-center gap-2 hover:bg-red-500/20 transition"
+        >
+          <LogOut className="w-5 h-5" />
+          Logout
+        </button>
+      </div>
+      
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 py-3 px-6">
+        <div className="max-w-md mx-auto flex justify-between">
+          <Link href="/dashboard">
+            <button className="flex flex-col items-center gap-1">
+              <div className="w-5 h-5 rounded-full bg-gray-600" />
+              <span className="text-xs text-gray-500">Wallet</span>
+            </button>
+          </Link>
+          <Link href="/transactions">
+            <button className="flex flex-col items-center gap-1">
+              <Clock className="w-5 h-5 text-gray-500" />
+              <span className="text-xs text-gray-500">Activity</span>
+            </button>
+          </Link>
+          <Link href="/profile">
+            <button className="flex flex-col items-center gap-1">
+              <div className="w-5 h-5 rounded-full bg-blue-500" />
+              <span className="text-xs text-blue-500">Profile</span>
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   );

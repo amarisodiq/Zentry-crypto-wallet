@@ -10,14 +10,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <body className="bg-black">
         <ThemeProvider attribute="class" defaultTheme="dark">
           <Toaster 
             position="top-right"
             toastOptions={{
               style: {
-                background: '#1f2937',
+                background: '#1a1a1a',
                 color: '#fff',
+                border: '1px solid #333',
               },
             }}
           />
