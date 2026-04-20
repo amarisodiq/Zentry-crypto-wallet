@@ -76,12 +76,114 @@ async function seed() {
       }
     }
     
-    console.log('\n📝 Available Test Accounts:');
+    // ============================================
+    // CUSTOM USER WITH SPECIFIC TRANSACTIONS
+    // USING YOUR EMAIL: nnajiubacheta@gmail.com
+    // ============================================
+    
+    const customUserEmail = 'nnajiubacheta@gmail.com';
+    const existingCustomUser = await prisma.user.findUnique({
+      where: { email: customUserEmail }
+    });
+    
+    let customUserId;
+    
+    if (!existingCustomUser) {
+      // Create the custom user with $50.32 balance
+      const customPassword = await bcrypt.hash('user123', 10);
+      const customUser = await prisma.user.create({
+        data: {
+          email: customUserEmail,
+          password: customPassword,
+          name: 'Nnajiuba cheta',
+          walletAddress: '0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1',
+          balance: JSON.stringify({ 
+            BTC: 0.00116,  // Approximately $50.32 USD worth of BTC
+            ETH: 0,
+            USDT: 0,
+            CAD: 50.32
+          }),
+          isActive: true
+        }
+      });
+      customUserId = customUser.id;
+      console.log(`✅ Custom user created (${customUserEmail} / user123)`);
+      console.log('   Balance: $50.32 CAD');
+    } else {
+      customUserId = existingCustomUser.id;
+      console.log(`✅ Custom user already exists (${customUserEmail})`);
+      
+      // Update balance to $50.32 if needed
+      await prisma.user.update({
+        where: { email: customUserEmail },
+        data: {
+          name: 'Nnajiuba cheta',
+          balance: JSON.stringify({ 
+            BTC: 0.00116,
+            ETH: 0,
+            USDT: 0,
+            CAD: 50.32
+          })
+        }
+      });
+      console.log('   Updated balance to $50.32 CAD');
+      
+      // Delete existing transactions for this user to avoid duplicates
+      await prisma.transaction.deleteMany({
+        where: { fromUserId: customUserId }
+      });
+      console.log('   Cleared existing transactions');
+    }
+    
+    // Create the two Bitcoin transactions in CAD
+    const transactions = [
+      {
+        fromUserId: customUserId,
+        fromAddress: '0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1',
+        toAddress: '0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1',
+        amount: 17000,
+        currency: 'CAD',
+        status: 'CONFIRMED',
+        type: 'SEND',
+        txHash: `0x${Date.now()}a1b2c3d4e5f6g7h8i9j0`,
+        createdAt: new Date('2026-02-19T10:30:00Z')
+      },
+      {
+        fromUserId: customUserId,
+        fromAddress: '0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1',
+        toAddress: '0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1',
+        amount: 23000,
+        currency: 'CAD',
+        status: 'CONFIRMED',
+        type: 'SEND',
+        txHash: `0x${Date.now()}k1l2m3n4o5p6q7r8s9t0`,
+        createdAt: new Date('2026-02-19T14:45:00Z')
+      }
+    ];
+    
+    for (const tx of transactions) {
+      await prisma.transaction.create({ data: tx });
+      console.log(`✅ Transaction created: $${tx.amount.toLocaleString()} CAD (Bitcoin) sent on ${tx.createdAt.toLocaleDateString()}`);
+    }
+    
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📝 Available Test Accounts:');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('Admin:   admin@zentry.com / admin123');
-    console.log('User 1:  user1@zentry.com / user123');
-    console.log('User 2:  user2@zentry.com / user123');
-    console.log('User 3:  user3@zentry.com / user123');
+    console.log('Admin:        admin@zentry.com / admin123');
+    console.log('User 1:       user1@zentry.com / user123');
+    console.log('User 2:       user2@zentry.com / user123');
+    console.log('User 3:       user3@zentry.com / user123');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🎯 CUSTOM USER (What you requested):');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Email:        nnajiubacheta@gmail.com');
+    console.log('Password:     user123');
+    console.log('Name:         Nnajiuba cheta');
+    console.log('Balance:      $50.32 CAD');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📅 Transaction History for Custom User:');
+    console.log('  • February 19, 2026 - $17,000 CAD (Bitcoin) sent');
+    console.log('  • February 19, 2026 - $23,000 CAD (Bitcoin) sent');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
   } catch (error) {
