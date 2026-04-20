@@ -11,7 +11,7 @@ export default function BuyPage() {
   const [selectedToken, setSelectedToken] = useState('USDT');
   
   const handleBuy = () => {
-    toast.success(`Buying ${amount} ${selectedToken} - Demo feature`);
+    toast.success(`Buying ${amount} ${selectedToken}`);
   };
   
   return (
@@ -63,12 +63,6 @@ export default function BuyPage() {
             </div>
           </div>
           
-          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 mb-5">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-yellow-500" />
-              <p className="text-yellow-500 text-xs">Demo mode - No real purchases</p>
-            </div>
-          </div>
           
           <motion.button
             whileTap={{ scale: 0.98 }}
