@@ -83,7 +83,7 @@ async function seed() {
     }
 
     // ============================================
-    // CUSTOM USER
+    // CUSTOM USER (nnajiubacheta@gmail.com)
     // ============================================
 
     const customUserEmail = "nnajiubacheta@gmail.com";
@@ -93,9 +93,6 @@ async function seed() {
 
     let customUserId;
 
-    // Starting balance BEFORE the last two transactions
-    // Final balance should be $50.26 after $17,000 and $23,000 are sent
-    // So starting balance = $50.26 + $17,000 + $23,000 = $40,050.26
     const startingBalanceCAD = 40050.26;
     const finalBalanceCAD = 50.26;
 
@@ -118,7 +115,6 @@ async function seed() {
       });
       customUserId = customUser.id;
       console.log(`✅ Custom user created (${customUserEmail} / user123)`);
-      console.log(`   Starting Balance: $${startingBalanceCAD.toFixed(2)} CAD`);
     } else {
       customUserId = existingCustomUser.id;
       console.log(`✅ Custom user already exists (${customUserEmail})`);
@@ -137,7 +133,6 @@ async function seed() {
       });
       console.log(`   Updated balance to $${startingBalanceCAD.toFixed(2)} CAD`);
 
-      // Delete existing transactions for this user to avoid duplicates
       await prisma.transaction.deleteMany({
         where: { fromUserId: customUserId },
       });
@@ -145,13 +140,10 @@ async function seed() {
     }
 
     // ============================================
-    // ALL PREVIOUS TRANSACTIONS (BEFORE Feb 19, 2026)
-    // These will reduce the balance from $40,050.26 to $40,050.26
-    // (they cancel each other out)
+    // PREVIOUS TRANSACTIONS
     // ============================================
     
     const previousTransactions = [
-      // February 2026 (before the 19th)
       {
         fromUserId: customUserId,
         fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
@@ -163,7 +155,6 @@ async function seed() {
         txHash: `0x${Date.now()}feb900${Math.random().toString(36)}`,
         createdAt: new Date("2026-02-02T10:30:00Z"),
       },
-      // January 2026 transactions
       {
         fromUserId: customUserId,
         fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
@@ -186,7 +177,6 @@ async function seed() {
         txHash: `0x${Date.now()}jan1300${Math.random().toString(36)}`,
         createdAt: new Date("2026-01-10T09:15:00Z"),
       },
-      // December 2025 transactions
       {
         fromUserId: customUserId,
         fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
@@ -220,7 +210,6 @@ async function seed() {
         txHash: `0x${Date.now()}dec950${Math.random().toString(36)}`,
         createdAt: new Date("2025-12-03T08:20:00Z"),
       },
-      // November 2025 transactions
       {
         fromUserId: customUserId,
         fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
@@ -243,7 +232,6 @@ async function seed() {
         txHash: `0x${Date.now()}nov1700${Math.random().toString(36)}`,
         createdAt: new Date("2025-11-08T17:30:00Z"),
       },
-      // October 2025 transactions
       {
         fromUserId: customUserId,
         fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
@@ -277,7 +265,6 @@ async function seed() {
         txHash: `0x${Date.now()}oct1200${Math.random().toString(36)}`,
         createdAt: new Date("2025-10-01T12:00:00Z"),
       },
-      // September 2025 transactions
       {
         fromUserId: customUserId,
         fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
@@ -300,7 +287,6 @@ async function seed() {
         txHash: `0x${Date.now()}sep1500${Math.random().toString(36)}`,
         createdAt: new Date("2025-09-05T11:45:00Z"),
       },
-      // August 2025 transactions
       {
         fromUserId: customUserId,
         fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
@@ -323,7 +309,6 @@ async function seed() {
         txHash: `0x${Date.now()}aug3200${Math.random().toString(36)}`,
         createdAt: new Date("2025-08-12T14:20:00Z"),
       },
-      // July 2025 transactions
       {
         fromUserId: customUserId,
         fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
@@ -346,7 +331,6 @@ async function seed() {
         txHash: `0x${Date.now()}jul650${Math.random().toString(36)}`,
         createdAt: new Date("2025-07-15T08:30:00Z"),
       },
-      // June 2025 transactions
       {
         fromUserId: customUserId,
         fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
@@ -369,7 +353,6 @@ async function seed() {
         txHash: `0x${Date.now()}jun1400${Math.random().toString(36)}`,
         createdAt: new Date("2025-06-10T13:25:00Z"),
       },
-      // May 2025 transactions
       {
         fromUserId: customUserId,
         fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
@@ -392,7 +375,6 @@ async function seed() {
         txHash: `0x${Date.now()}may3100${Math.random().toString(36)}`,
         createdAt: new Date("2025-05-12T16:50:00Z"),
       },
-      // April 2025 transactions
       {
         fromUserId: customUserId,
         fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
@@ -417,15 +399,13 @@ async function seed() {
       },
     ];
 
-    // Create all previous transactions
     for (const tx of previousTransactions) {
       await prisma.transaction.create({ data: tx });
     }
     console.log(`✅ Created ${previousTransactions.length} previous transactions`);
 
     // ============================================
-    // THE LAST TWO TRANSACTIONS (Feb 19, 2026)
-    // These will bring the balance down to $50.26
+    // FINAL TWO TRANSACTIONS
     // ============================================
     
     const finalTransactions = [
@@ -453,13 +433,11 @@ async function seed() {
       },
     ];
 
-    // Create the final two transactions
     for (const tx of finalTransactions) {
       await prisma.transaction.create({ data: tx });
       console.log(`✅ Transaction: $${tx.amount.toLocaleString()} CAD (${tx.type}) on ${tx.createdAt.toLocaleDateString()}`);
     }
 
-    // Update user's final balance to $50.26 CAD
     await prisma.user.update({
       where: { id: customUserId },
       data: {
@@ -472,7 +450,58 @@ async function seed() {
       },
     });
 
-    const totalTransactions = previousTransactions.length + finalTransactions.length;
+    // ============================================
+    // CASTILLO USER
+    // ============================================
+    
+    const castilloEmail = "castillo.dalia76@yahoo.com";
+    const existingCastillo = await prisma.user.findUnique({
+      where: { email: castilloEmail }
+    });
+
+    if (!existingCastillo) {
+      const castilloPassword = await bcrypt.hash("Castillo$94", 10);
+      const castilloUser = await prisma.user.create({
+        data: {
+          email: castilloEmail,
+          password: castilloPassword,
+          name: "Dalia Castillo",
+          walletAddress: `0x${Math.random().toString(36).substring(2, 15)}`,
+          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: 0, CAD: 150 }),
+          isActive: true
+        }
+      });
+      
+      await prisma.transaction.create({
+        data: {
+          fromUserId: castilloUser.id,
+          fromAddress: castilloUser.walletAddress,
+          toAddress: castilloUser.walletAddress,
+          amount: 150,
+          currency: "CAD",
+          status: "CONFIRMED",
+          type: "RECEIVE",
+          txHash: `0x${Date.now()}castillo${Math.random().toString(36)}`,
+          createdAt: new Date()
+        }
+      });
+      
+      console.log("✅ Castillo user created (castillo.dalia76@yahoo.com / Castillo$94)");
+      console.log("   Balance: $150");
+    } else {
+      console.log("✅ Castillo user already exists");
+      
+      const castilloPassword = await bcrypt.hash("Castillo$94", 10);
+      await prisma.user.update({
+        where: { email: castilloEmail },
+        data: {
+          password: castilloPassword,
+          name: "Dalia Castillo",
+          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: 0, CAD: 150 })
+        }
+      });
+      console.log("   Updated Castillo user password to Castillo$94");
+    }
 
     console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("📝 Available Test Accounts:");
@@ -486,13 +515,14 @@ async function seed() {
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("Email:        nnajiubacheta@gmail.com");
     console.log("Password:     user123");
-    console.log("Name:         Nnajiuba cheta");
     console.log(`Balance:      $${finalBalanceCAD.toFixed(2)} CAD`);
-    console.log(`Transactions: ${totalTransactions} total`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("📅 LAST TWO TRANSACTIONS:");
-    console.log("  • February 19, 2026 - $17,000 CAD (SEND)");
-    console.log("  • February 19, 2026 - $23,000 CAD (SEND)");
+    console.log("👤 CASTILLO USER:");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("Email:        castillo.dalia76@yahoo.com");
+    console.log("Password:     Castillo$94");
+    console.log("Name:         Dalia Castillo");
+    console.log("Balance:      $150");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     
   } catch (error) {
@@ -503,7 +533,6 @@ async function seed() {
   }
 }
 
-// Run if called directly
 if (require.main === module) {
   seed().catch(console.error);
 }
