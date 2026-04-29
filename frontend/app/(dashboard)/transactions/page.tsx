@@ -30,6 +30,15 @@ export default function TransactionsPage() {
     }
   };
   
+  // Function to get custom description for specific transactions
+  const getTransactionDescription = (tx: any) => {
+    // Electronic Deposit for Castillo's $150 USD transaction
+    if (tx.amount === 150 && tx.currency === 'USD' && tx.type === 'RECEIVE') {
+      return 'Electronic Deposit';
+    }
+    return null;
+  };
+  
   const filteredTransactions = transactions.filter(tx => {
     if (filter === 'all') return true;
     return tx.status === filter.toUpperCase();
@@ -94,6 +103,12 @@ export default function TransactionsPage() {
                       <p className="text-white font-medium">
                         {tx.type === 'SEND' ? 'Sent' : 'Received'} {tx.amount} {tx.currency}
                       </p>
+                      {/* Show description if available */}
+                      {getTransactionDescription(tx) && (
+                        <p className="text-green-400 text-xs mt-1">
+                          {getTransactionDescription(tx)}
+                        </p>
+                      )}
                       <p className="text-gray-500 text-xs">
                         {new Date(tx.createdAt).toLocaleString()}
                       </p>

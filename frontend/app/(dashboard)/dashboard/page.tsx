@@ -21,6 +21,7 @@ interface Balance {
   ETH: number;
   USDT: number;
   CAD?: number;
+  USD?: number;  // Add USD
   SOL?: number;
 }
 
@@ -47,16 +48,23 @@ export default function Dashboard() {
     }
   }, [user?.balance]);
   
-  // Calculate total value - prioritize CAD if available
+  // Calculate total value - include USD
   let totalValue = 0;
-  if (balance?.CAD) {
-    totalValue = balance.CAD;
-  } else {
-    totalValue = (balance?.BTC || 0) * (prices?.bitcoin?.usd || 43250) +
-                 (balance?.ETH || 0) * (prices?.ethereum?.usd || 2250) +
-                 (balance?.USDT || 0) * 1 +
-                 (balance?.SOL || 0) * (prices?.solana?.usd || 84.50);
+  
+  // Add USD balance (1 USD = 1 USD)
+  if (balance?.USD) {
+    totalValue += balance.USD;
   }
+  
+  // Add CAD balance (1 CAD = 0.73 USD roughly)
+  if (balance?.CAD) {
+    totalValue += balance.CAD * 0.73;
+  }
+  
+  totalValue += (balance?.BTC || 0) * (prices?.bitcoin?.usd || 43250);
+  totalValue += (balance?.ETH || 0) * (prices?.ethereum?.usd || 2250);
+  totalValue += (balance?.USDT || 0) * 1;
+  totalValue += (balance?.SOL || 0) * (prices?.solana?.usd || 84.50);
   
   const totalChange = 6.32;
   const totalChangePercent = 5.48;
@@ -153,13 +161,34 @@ export default function Dashboard() {
           </div>
           
           <div className="space-y-2">
-            {/* Show CAD Balance if available */}
-            {balance?.CAD && (
+            {/* Show USD if available */}
+            {balance?.USD !== undefined && balance.USD > 0 && (
+              <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                      <span className="text-white font-bold">$</span>
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold">US Dollar</p>
+                      <p className="text-gray-500 text-xs">USD</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-white font-semibold">${balance.USD.toLocaleString()} USD</p>
+                    <p className="text-gray-500 text-xs">≈ ${balance.USD.toLocaleString()} USD</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Show CAD if available */}
+            {balance?.CAD !== undefined && balance.CAD > 0 && (
               <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
-                      <span className="text-white font-bold">$</span>
+                      <span className="text-white font-bold">C$</span>
                     </div>
                     <div>
                       <p className="text-white font-semibold">Canadian Dollar</p>
@@ -173,6 +202,54 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+            
+            {/* Solana */}
+            <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                    <span className="text-white font-bold">◎</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold">Solana</p>
+                    <p className="text-gray-500 text-xs">SOL</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-white font-semibold">{balance?.SOL?.toFixed(4) || '1.4400'} SOL</p>
+                  <p className="text-gray-500 text-xs">${((balance?.SOL || 1.44) * (prices?.solana?.usd || 84.50)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                </div>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-gray-800">
+                <div className="flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3 text-green-500" />
+                  <span className="text-green-500 text-xs">+5.5%</span>
+                </div>
+                <div className="flex gap-3">
+                  <button className="text-blue-500 text-xs hover:text-blue-400 transition">Buy</button>
+                  <button className="text-gray-500 text-xs hover:text-gray-400 transition">Sell</button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Ethereum */}
+            <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                    <span className="text-white font-bold">Ξ</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold">Ethereum</p>
+                    <p className="text-gray-500 text-xs">ETH</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-white font-semibold">{balance?.ETH?.toFixed(4) || '0.0000'} ETH</p>
+                  <p className="text-gray-500 text-xs">${((balance?.ETH || 0) * (prices?.ethereum?.usd || 2250)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                </div>
+              </div>
+            </div>
             
             {/* Bitcoin */}
             <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">
@@ -189,6 +266,25 @@ export default function Dashboard() {
                 <div className="text-right">
                   <p className="text-white font-semibold">{balance?.BTC?.toFixed(4) || '0.0000'} BTC</p>
                   <p className="text-gray-500 text-xs">${((balance?.BTC || 0) * (prices?.bitcoin?.usd || 43250)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Tether */}
+            <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                    <span className="text-white font-bold">₮</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold">Tether</p>
+                    <p className="text-gray-500 text-xs">USDT</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-white font-semibold">{balance?.USDT?.toFixed(4) || '0.0000'} USDT</p>
+                  <p className="text-gray-500 text-xs">${(balance?.USDT || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                 </div>
               </div>
             </div>
