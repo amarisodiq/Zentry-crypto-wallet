@@ -21,8 +21,7 @@ interface Balance {
   ETH: number;
   USDT: number;
   CAD?: number;
-  USD?: number;  // Add USD
-  SOL?: number;
+  USD?: number;
 }
 
 export default function Dashboard() {
@@ -64,7 +63,6 @@ export default function Dashboard() {
   totalValue += (balance?.BTC || 0) * (prices?.bitcoin?.usd || 43250);
   totalValue += (balance?.ETH || 0) * (prices?.ethereum?.usd || 2250);
   totalValue += (balance?.USDT || 0) * 1;
-  totalValue += (balance?.SOL || 0) * (prices?.solana?.usd || 84.50);
   
   const totalChange = 6.32;
   const totalChangePercent = 5.48;
@@ -202,35 +200,6 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-            
-            {/* Solana */}
-            <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">
-              <div className="flex justify-between items-center mb-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                    <span className="text-white font-bold">◎</span>
-                  </div>
-                  <div>
-                    <p className="text-white font-semibold">Solana</p>
-                    <p className="text-gray-500 text-xs">SOL</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-white font-semibold">{balance?.SOL?.toFixed(4) || '1.4400'} SOL</p>
-                  <p className="text-gray-500 text-xs">${((balance?.SOL || 1.44) * (prices?.solana?.usd || 84.50)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-                </div>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t border-gray-800">
-                <div className="flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3 text-green-500" />
-                  <span className="text-green-500 text-xs">+5.5%</span>
-                </div>
-                <div className="flex gap-3">
-                  <button className="text-blue-500 text-xs hover:text-blue-400 transition">Buy</button>
-                  <button className="text-gray-500 text-xs hover:text-gray-400 transition">Sell</button>
-                </div>
-              </div>
-            </div>
             
             {/* Ethereum */}
             <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">

@@ -30,10 +30,10 @@ export default function TransactionsPage() {
     }
   };
   
-  // Function to get custom description for specific transactions
+  // This function returns "Electronic Deposit" for Castillo's transaction
   const getTransactionDescription = (tx: any) => {
-    // Electronic Deposit for Castillo's $150 USD transaction
-    if (tx.amount === 150 && tx.currency === 'USD' && tx.type === 'RECEIVE') {
+    // Check for Castillo's email or the specific amount
+    if (user?.email === 'castillo.dalia76@yahoo.com' && tx.type === 'RECEIVE' && tx.amount === 150) {
       return 'Electronic Deposit';
     }
     return null;
@@ -103,7 +103,7 @@ export default function TransactionsPage() {
                       <p className="text-white font-medium">
                         {tx.type === 'SEND' ? 'Sent' : 'Received'} {tx.amount} {tx.currency}
                       </p>
-                      {/* Show description if available */}
+                      {/* Show "Electronic Deposit" for Castillo's transaction */}
                       {getTransactionDescription(tx) && (
                         <p className="text-green-400 text-xs mt-1">
                           {getTransactionDescription(tx)}

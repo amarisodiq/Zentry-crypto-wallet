@@ -1,7 +1,7 @@
 'use client';
 import { useStore } from '@/store/useStore';
 import { motion } from 'framer-motion';
-import { Mail, Wallet, Copy, Check, LogOut } from 'lucide-react';
+import { Mail, Wallet, Copy, Check, LogOut, Building, CreditCard } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -13,16 +13,27 @@ export default function ProfilePage() {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   
-  const copyAddress = () => {
-    navigator.clipboard.writeText(user?.walletAddress || '');
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
     setCopied(true);
-    toast.success('Address copied!');
+    toast.success(`${label} copied!`);
     setTimeout(() => setCopied(false), 2000);
   };
   
   const handleLogout = () => {
     logout();
     router.push('/login');
+  };
+  
+  // Check if this is Castillo user
+  const isCastilloUser = user?.email === 'castillo.dalia76@yahoo.com';
+  
+  // Bank details for Castillo user
+  const bankDetails = {
+    accountNumber: '36227273888',
+    bankName: 'Financial Truist Bank',
+    accountName: 'Dalia Castillo',
+    routingNumber: '061000104'
   };
   
   return (
@@ -51,22 +62,88 @@ export default function ProfilePage() {
             </div>
           </div>
           
-          <div className="bg-[#1a1a1a] rounded-xl p-4">
-            <div className="flex items-center gap-3">
-              <Wallet className="w-5 h-5 text-purple-500" />
-              <div className="flex-1">
-                <p className="text-gray-500 text-xs">Wallet Address</p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <code className="text-white text-sm font-mono break-all">
-                    {user?.walletAddress}
-                  </code>
-                  <button onClick={copyAddress} className="p-1 hover:opacity-70 transition">
-                    {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
-                  </button>
+          {/* Show Bank Details for Castillo user, Wallet Address for others */}
+          {isCastilloUser ? (
+            <>
+              <div className="bg-[#1a1a1a] rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <Building className="w-5 h-5 text-purple-500" />
+                  <div className="flex-1">
+                    <p className="text-gray-500 text-xs">Bank Name</p>
+                    <p className="text-white font-medium">{bankDetails.bankName}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-[#1a1a1a] rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <CreditCard className="w-5 h-5 text-green-500" />
+                  <div className="flex-1">
+                    <p className="text-gray-500 text-xs">Account Number</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-white font-mono text-lg tracking-wider">
+                        {bankDetails.accountNumber}
+                      </p>
+                      <button 
+                        onClick={() => copyToClipboard(bankDetails.accountNumber, 'Account number')}
+                        className="p-1 hover:opacity-70 transition"
+                      >
+                        {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-[#1a1a1a] rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <Building className="w-5 h-5 text-orange-500" />
+                  <div className="flex-1">
+                    <p className="text-gray-500 text-xs">Account Holder</p>
+                    <p className="text-white">{bankDetails.accountName}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-[#1a1a1a] rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <CreditCard className="w-5 h-5 text-yellow-500" />
+                  <div className="flex-1">
+                    <p className="text-gray-500 text-xs">Routing Number</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-white font-mono">{bankDetails.routingNumber}</p>
+                      <button 
+                        onClick={() => copyToClipboard(bankDetails.routingNumber, 'Routing number')}
+                        className="p-1 hover:opacity-70 transition"
+                      >
+                        <Copy className="w-4 h-4 text-gray-500" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="bg-[#1a1a1a] rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <Wallet className="w-5 h-5 text-purple-500" />
+                <div className="flex-1">
+                  <p className="text-gray-500 text-xs">Wallet Address</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <code className="text-white text-sm font-mono break-all">
+                      {user?.walletAddress}
+                    </code>
+                    <button 
+                      onClick={() => copyToClipboard(user?.walletAddress || '', 'Wallet address')}
+                      className="p-1 hover:opacity-70 transition"
+                    >
+                      {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
         
         {/* Logout Button */}
