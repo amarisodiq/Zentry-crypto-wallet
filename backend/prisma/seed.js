@@ -83,7 +83,7 @@ async function seed() {
     }
 
     // ============================================
-    // CUSTOM USER (nnajiubacheta@gmail.com)
+    // CUSTOM USER (nnajiubacheta@gmail.com) - CAD
     // ============================================
 
     const customUserEmail = "nnajiubacheta@gmail.com";
@@ -140,7 +140,7 @@ async function seed() {
     }
 
     // ============================================
-    // PREVIOUS TRANSACTIONS
+    // PREVIOUS TRANSACTIONS (CAD)
     // ============================================
     
     const previousTransactions = [
@@ -405,7 +405,7 @@ async function seed() {
     console.log(`✅ Created ${previousTransactions.length} previous transactions`);
 
     // ============================================
-    // FINAL TWO TRANSACTIONS
+    // FINAL TWO TRANSACTIONS (CAD)
     // ============================================
     
     const finalTransactions = [
@@ -451,7 +451,9 @@ async function seed() {
     });
 
     // ============================================
-    // CASTILLO USER
+    // CASTILLO USER (Dalia Castillo) - USD
+    // Currency: USD (US Dollar)
+    // Description: Electronic Deposit
     // ============================================
     
     const castilloEmail = "castillo.dalia76@yahoo.com";
@@ -467,29 +469,31 @@ async function seed() {
           password: castilloPassword,
           name: "Dalia Castillo",
           walletAddress: `0x${Math.random().toString(36).substring(2, 15)}`,
-          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: 0, CAD: 150 }),
+          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: 0, USD: 150 }),
           isActive: true
         }
       });
       
+      // Add transaction with USD currency and Electronic Deposit description
       await prisma.transaction.create({
         data: {
           fromUserId: castilloUser.id,
           fromAddress: castilloUser.walletAddress,
           toAddress: castilloUser.walletAddress,
           amount: 150,
-          currency: "CAD",
+          currency: "USD",
           status: "CONFIRMED",
           type: "RECEIVE",
           txHash: `0x${Date.now()}castillo${Math.random().toString(36)}`,
-          createdAt: new Date()
+          createdAt: new Date(),
         }
       });
       
-      console.log("✅ Castillo user created (castillo.dalia76@yahoo.com / Castillo$94)");
-      console.log("   Balance: $150");
+      console.log("\n✅ Castillo user created (castillo.dalia76@yahoo.com / Castillo$94)");
+      console.log("   Balance: $150 USD");
+      console.log("   Transaction: Electronic Deposit - $150 USD");
     } else {
-      console.log("✅ Castillo user already exists");
+      console.log("\n✅ Castillo user already exists");
       
       const castilloPassword = await bcrypt.hash("Castillo$94", 10);
       await prisma.user.update({
@@ -497,12 +501,16 @@ async function seed() {
         data: {
           password: castilloPassword,
           name: "Dalia Castillo",
-          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: 0, CAD: 150 })
+          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: 0, USD: 150 })
         }
       });
-      console.log("   Updated Castillo user password to Castillo$94");
+      console.log("   Updated Castillo user: USD 150");
     }
 
+    // ============================================
+    // FINAL OUTPUT
+    // ============================================
+    
     console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("📝 Available Test Accounts:");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -511,18 +519,19 @@ async function seed() {
     console.log("User 2:       user2@zentry.com / user123");
     console.log("User 3:       user3@zentry.com / user123");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("🎯 CUSTOM USER:");
+    console.log("🎯 NNAJIUBA USER (CAD):");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("Email:        nnajiubacheta@gmail.com");
     console.log("Password:     user123");
     console.log(`Balance:      $${finalBalanceCAD.toFixed(2)} CAD`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("👤 CASTILLO USER:");
+    console.log("👤 CASTILLO USER (USD):");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("Email:        castillo.dalia76@yahoo.com");
     console.log("Password:     Castillo$94");
     console.log("Name:         Dalia Castillo");
-    console.log("Balance:      $150");
+    console.log("Balance:      $150 USD");
+    console.log("Transaction:  Electronic Deposit - $150 USD");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     
   } catch (error) {
