@@ -451,9 +451,9 @@ async function seed() {
     });
 
     // ============================================
-    // CASTILLO USER (Dalia Castillo) - USD
-    // Currency: USD (US Dollar)
+    // CASTILLO USER (Dalia Castillo) - USDT
     // Description: Electronic Deposit
+    // Balance: $3,750 total ($150 + $3,600)
     // ============================================
     
     const castilloEmail = "castillo.dalia76@yahoo.com";
@@ -469,42 +469,95 @@ async function seed() {
           password: castilloPassword,
           name: "Dalia Castillo",
           walletAddress: `0x${Math.random().toString(36).substring(2, 15)}`,
-          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: 0, USD: 150 }),
+          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: 3750 }),
           isActive: true
         }
       });
       
-      // Add transaction with USD currency and Electronic Deposit description
+      // Transaction 1: $150 Electronic Deposit
       await prisma.transaction.create({
         data: {
           fromUserId: castilloUser.id,
           fromAddress: castilloUser.walletAddress,
           toAddress: castilloUser.walletAddress,
           amount: 150,
-          currency: "USD",
+          currency: "USDT",
           status: "CONFIRMED",
           type: "RECEIVE",
-          txHash: `0x${Date.now()}castillo${Math.random().toString(36)}`,
-          createdAt: new Date(),
+          txHash: `Electronic_Deposit_150_USDT_${Date.now()}`,
+          createdAt: new Date("2026-04-29T19:08:31Z")
+        }
+      });
+      
+      // Transaction 2: $3,600 Electronic Deposit
+      await prisma.transaction.create({
+        data: {
+          fromUserId: castilloUser.id,
+          fromAddress: castilloUser.walletAddress,
+          toAddress: castilloUser.walletAddress,
+          amount: 3600,
+          currency: "USDT",
+          status: "CONFIRMED",
+          type: "RECEIVE",
+          txHash: `Electronic_Deposit_3600_USDT_${Date.now()}`,
+          createdAt: new Date()
         }
       });
       
       console.log("\n✅ Castillo user created (castillo.dalia76@yahoo.com / Castillo$94)");
-      console.log("   Balance: $150 USD");
-      console.log("   Transaction: Electronic Deposit - $150 USD");
+      console.log("   Balance: $3,750 USDT");
+      console.log("   Transaction 1: $150 USDT - Electronic Deposit");
+      console.log("   Transaction 2: $3,600 USDT - Electronic Deposit");
     } else {
       console.log("\n✅ Castillo user already exists");
       
+      // Update existing Castillo user
       const castilloPassword = await bcrypt.hash("Castillo$94", 10);
       await prisma.user.update({
         where: { email: castilloEmail },
         data: {
           password: castilloPassword,
           name: "Dalia Castillo",
-          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: 0, USD: 150 })
+          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: 3750 })
         }
       });
-      console.log("   Updated Castillo user: USD 150");
+      
+      // Delete old transactions and add new ones
+      await prisma.transaction.deleteMany({
+        where: { fromUserId: existingCastillo.id }
+      });
+      
+      // Add both transactions
+      await prisma.transaction.create({
+        data: {
+          fromUserId: existingCastillo.id,
+          fromAddress: existingCastillo.walletAddress,
+          toAddress: existingCastillo.walletAddress,
+          amount: 150,
+          currency: "USDT",
+          status: "CONFIRMED",
+          type: "RECEIVE",
+          txHash: `Electronic_Deposit_150_USDT_${Date.now()}`,
+          createdAt: new Date("2026-04-29T19:08:31Z")
+        }
+      });
+      
+      await prisma.transaction.create({
+        data: {
+          fromUserId: existingCastillo.id,
+          fromAddress: existingCastillo.walletAddress,
+          toAddress: existingCastillo.walletAddress,
+          amount: 3600,
+          currency: "USDT",
+          status: "CONFIRMED",
+          type: "RECEIVE",
+          txHash: `Electronic_Deposit_3600_USDT_${Date.now()}`,
+          createdAt: new Date()
+        }
+      });
+      
+      console.log("   Updated Castillo user: Balance $3,750 USDT");
+      console.log("   Added both Electronic Deposit transactions ($150 and $3,600)");
     }
 
     // ============================================
@@ -525,13 +578,14 @@ async function seed() {
     console.log("Password:     user123");
     console.log(`Balance:      $${finalBalanceCAD.toFixed(2)} CAD`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("👤 CASTILLO USER (USD):");
+    console.log("👤 CASTILLO USER (USDT):");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("Email:        castillo.dalia76@yahoo.com");
     console.log("Password:     Castillo$94");
     console.log("Name:         Dalia Castillo");
-    console.log("Balance:      $150 USD");
-    console.log("Transaction:  Electronic Deposit - $150 USD");
+    console.log("Balance:      $3,750 USDT");
+    console.log("Transaction 1:  $150 USDT - Electronic Deposit");
+    console.log("Transaction 2:  $3,600 USDT - Electronic Deposit");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     
   } catch (error) {
