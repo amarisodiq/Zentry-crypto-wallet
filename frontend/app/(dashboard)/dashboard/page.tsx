@@ -233,7 +233,7 @@ export default function Dashboard() {
           <Link href="/transactions">
             <button className="flex flex-col items-center gap-1 transition active:scale-95">
               <Activity className="w-5 h-5 text-gray-500" />
-              <span className="text-xs text-gray-500">Activity</span>
+              <span className="text-xs text-gray-500">Transactions</span>
             </button>
           </Link>
           <Link href="/profile">

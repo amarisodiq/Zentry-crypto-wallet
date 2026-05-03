@@ -30,23 +30,8 @@ export default function TransactionsPage() {
     }
   };
   
-  // Sort transactions: PENDING first, then CONFIRMED, then FAILED by date
+  // Sort transactions: NEWEST FIRST (by createdAt date)
   const sortedTransactions = [...transactions].sort((a, b) => {
-    // Status priority: PENDING (1), CONFIRMED (2), FAILED (3)
-    const statusPriority: { [key: string]: number } = {
-      'PENDING': 1,
-      'CONFIRMED': 2,
-      'FAILED': 3
-    };
-    
-    const priorityA = statusPriority[a.status] || 2;
-    const priorityB = statusPriority[b.status] || 2;
-    
-    if (priorityA !== priorityB) {
-      return priorityA - priorityB;
-    }
-    
-    // If same status, sort by date (newest first)
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
   
@@ -86,7 +71,7 @@ export default function TransactionsPage() {
           ))}
         </div>
         
-        {/* Transactions List */}
+        {/* Transactions List - Newest at top */}
         <div className="space-y-3">
           {filteredTransactions.length === 0 ? (
             <div className="bg-[#1a1a1a] rounded-xl p-12 text-center">
@@ -101,6 +86,8 @@ export default function TransactionsPage() {
                 transition={{ delay: idx * 0.05 }}
                 className={`bg-[#1a1a1a] rounded-xl p-4 ${
                   tx.status === 'PENDING' ? 'border-l-4 border-l-yellow-500' : ''
+                } ${
+                  tx.status === 'FAILED' ? 'border-l-4 border-l-red-500' : ''
                 }`}
               >
                 <div className="flex justify-between items-start">
@@ -160,7 +147,7 @@ export default function TransactionsPage() {
           <Link href="/transactions">
             <button className="flex flex-col items-center gap-1">
               <Clock className="w-5 h-5 text-blue-500" />
-              <span className="text-xs text-blue-500">Activity</span>
+              <span className="text-xs text-blue-500">Transactions</span>
             </button>
           </Link>
           <Link href="/profile">
