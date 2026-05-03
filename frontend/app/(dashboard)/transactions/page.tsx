@@ -30,16 +30,27 @@ export default function TransactionsPage() {
     }
   };
   
-  // This function returns "Electronic Deposit" for Castillo's transaction
-  const getTransactionDescription = (tx: any) => {
-    // Check for Castillo's email or the specific amount
-    if (user?.email === 'castillo.dalia76@yahoo.com' && tx.type === 'RECEIVE' && tx.amount === 150) {
-      return 'Electronic Deposit';
+  // Sort transactions: PENDING first, then CONFIRMED, then FAILED by date
+  const sortedTransactions = [...transactions].sort((a, b) => {
+    // Status priority: PENDING (1), CONFIRMED (2), FAILED (3)
+    const statusPriority: { [key: string]: number } = {
+      'PENDING': 1,
+      'CONFIRMED': 2,
+      'FAILED': 3
+    };
+    
+    const priorityA = statusPriority[a.status] || 2;
+    const priorityB = statusPriority[b.status] || 2;
+    
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
     }
-    return null;
-  };
+    
+    // If same status, sort by date (newest first)
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
   
-  const filteredTransactions = transactions.filter(tx => {
+  const filteredTransactions = sortedTransactions.filter(tx => {
     if (filter === 'all') return true;
     return tx.status === filter.toUpperCase();
   });
@@ -60,7 +71,7 @@ export default function TransactionsPage() {
         
         {/* Filters */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {['all', 'confirmed', 'pending', 'failed'].map((f) => (
+          {['all', 'pending', 'confirmed', 'failed'].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -88,7 +99,9 @@ export default function TransactionsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="bg-[#1a1a1a] rounded-xl p-4"
+                className={`bg-[#1a1a1a] rounded-xl p-4 ${
+                  tx.status === 'PENDING' ? 'border-l-4 border-l-yellow-500' : ''
+                }`}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
@@ -103,12 +116,6 @@ export default function TransactionsPage() {
                       <p className="text-white font-medium">
                         {tx.type === 'SEND' ? 'Sent' : 'Received'} {tx.amount} {tx.currency}
                       </p>
-                      {/* Show "Electronic Deposit" for Castillo's transaction */}
-                      {getTransactionDescription(tx) && (
-                        <p className="text-green-400 text-xs mt-1">
-                          {getTransactionDescription(tx)}
-                        </p>
-                      )}
                       <p className="text-gray-500 text-xs">
                         {new Date(tx.createdAt).toLocaleString()}
                       </p>
@@ -120,7 +127,15 @@ export default function TransactionsPage() {
                   <div className="text-right">
                     <div className="flex items-center gap-1">
                       {getStatusIcon(tx.status)}
-                      <span className="text-xs text-gray-400 capitalize">{tx.status.toLowerCase()}</span>
+                      <span className={`text-xs capitalize ${
+                        tx.status === 'PENDING' 
+                          ? 'text-yellow-500' 
+                          : tx.status === 'CONFIRMED' 
+                            ? 'text-green-500' 
+                            : 'text-red-500'
+                      }`}>
+                        {tx.status.toLowerCase()}
+                      </span>
                     </div>
                     <p className={`text-sm font-medium mt-1 ${tx.type === 'SEND' ? 'text-red-500' : 'text-green-500'}`}>
                       {tx.type === 'SEND' ? '-' : '+'}{tx.amount} {tx.currency}
