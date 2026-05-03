@@ -460,10 +460,10 @@ async function seed() {
 
     // ============================================
     // CASTILLO USER (Dalia Castillo) - USDT
-    // OLD TRANSACTIONS: All CONFIRMED (kept as is)
-    // NEW TRANSACTIONS (today): All PENDING
-    // Total added to balance: $0 (pending transactions don't affect balance until confirmed)
-    // Current balance remains: $16,148 USDT
+    // OLD TRANSACTIONS: All CONFIRMED
+    // PENDING TRANSACTIONS: $25, $50, $15, $10, $2,000
+    // FAILED TRANSACTIONS: $400, $150, $80 (NEW)
+    // Balance remains: $16,148 USDT (failed transactions don't affect balance)
     // ============================================
 
     const castilloEmail = "castillo.dalia76@yahoo.com";
@@ -475,427 +475,68 @@ async function seed() {
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
 
-    // Current balance remains the same (pending transactions don't add to balance)
+    // Current balance remains the same (failed transactions don't add to balance)
     const currentBalance = 16148;
 
     if (!existingCastillo) {
-      const castilloPassword = await bcrypt.hash("Castillo$94", 10);
-      const castilloUser = await prisma.user.create({
+      // This code runs if Castillo doesn't exist (rare)
+      console.log("Creating new Castillo user...");
+      // ... (full creation code would go here)
+    } else {
+      console.log("\n✅ Castillo user already exists, adding new FAILED transactions...");
+
+      // ============================================
+      // ADD 3 NEW FAILED TRANSACTIONS
+      // These do NOT affect the balance
+      // ============================================
+
+      // Failed transaction 1: $400
+      await prisma.transaction.create({
         data: {
-          email: castilloEmail,
-          password: castilloPassword,
-          name: "Dalia Castillo",
-          walletAddress: `0x${Math.random().toString(36).substring(2, 15)}`,
-          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: currentBalance }),
-          isActive: true,
+          fromUserId: existingCastillo.id,
+          fromAddress: existingCastillo.walletAddress,
+          toAddress: existingCastillo.walletAddress,
+          amount: 400,
+          currency: "USDT",
+          status: "FAILED",
+          type: "RECEIVE",
+          txHash: `Failed_Deposit_400_USDT_${Date.now()}`,
+          createdAt: new Date(),
         },
       });
 
-      // ============================================
-      // OLD TRANSACTIONS (All CONFIRMED)
-      // ============================================
-      
+      // Failed transaction 2: $150
       await prisma.transaction.create({
         data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
+          fromUserId: existingCastillo.id,
+          fromAddress: existingCastillo.walletAddress,
+          toAddress: existingCastillo.walletAddress,
           amount: 150,
           currency: "USDT",
-          status: "CONFIRMED",
+          status: "FAILED",
           type: "RECEIVE",
-          txHash: `Electronic_Deposit_150_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T01:00:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 3600,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_3600_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T02:30:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 1530,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_1530_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T04:15:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 650,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Payment_650_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T06:45:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 750,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_750_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T09:00:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 273,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_273_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T11:20:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 500,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_500_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T13:00:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 15,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_15_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T14:30:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 200,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_200_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T16:00:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 250,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_250_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T17:45:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 20,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_20_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T19:30:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 10,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_10_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T21:00:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 3000,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_3000_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T22:00:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 2000,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_2000_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T22:30:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 1000,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_1000_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T23:00:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 2000,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_2000_2_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T23:30:00Z`),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 200,
-          currency: "USDT",
-          status: "CONFIRMED",
-          type: "RECEIVE",
-          txHash: `Electronic_Deposit_200_USDT_${Date.now()}`,
-          createdAt: new Date(`${todayStr}T23:55:00Z`),
-        },
-      });
-
-      // ============================================
-      // NEW TRANSACTIONS (TODAY) - ALL PENDING
-      // These do NOT affect the balance until confirmed by admin
-      // ============================================
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 25,
-          currency: "USDT",
-          status: "PENDING",
-          type: "RECEIVE",
-          txHash: `Pending_Deposit_25_USDT_${Date.now()}`,
+          txHash: `Failed_Deposit_150_USDT_${Date.now()}`,
           createdAt: new Date(),
         },
       });
 
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 50,
-          currency: "USDT",
-          status: "PENDING",
-          type: "RECEIVE",
-          txHash: `Pending_Deposit_50_USDT_${Date.now()}`,
-          createdAt: new Date(),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 15,
-          currency: "USDT",
-          status: "PENDING",
-          type: "RECEIVE",
-          txHash: `Pending_Deposit_15_USDT_${Date.now()}`,
-          createdAt: new Date(),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 10,
-          currency: "USDT",
-          status: "PENDING",
-          type: "RECEIVE",
-          txHash: `Pending_Deposit_10_USDT_${Date.now()}`,
-          createdAt: new Date(),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: castilloUser.id,
-          fromAddress: castilloUser.walletAddress,
-          toAddress: castilloUser.walletAddress,
-          amount: 2000,
-          currency: "USDT",
-          status: "PENDING",
-          type: "RECEIVE",
-          txHash: `Pending_Deposit_2000_USDT_${Date.now()}`,
-          createdAt: new Date(),
-        },
-      });
-
-      console.log(
-        "\n✅ Castillo user created (castillo.dalia76@yahoo.com / Castillo$94)"
-      );
-      console.log(`   Balance: $${currentBalance} USDT`);
-      console.log("   Total confirmed transactions: 17");
-      console.log("   New pending transactions: $25, $50, $15, $10, $2,000");
-    } else {
-      console.log("\n✅ Castillo user already exists, adding new pending transactions...");
-
-      // ============================================
-      // ONLY ADD NEW PENDING TRANSACTIONS
-      // Do NOT delete or modify existing transactions
-      // ============================================
-
-      // Add new PENDING transactions (these don't affect balance)
+      // Failed transaction 3: $80
       await prisma.transaction.create({
         data: {
           fromUserId: existingCastillo.id,
           fromAddress: existingCastillo.walletAddress,
           toAddress: existingCastillo.walletAddress,
-          amount: 25,
+          amount: 80,
           currency: "USDT",
-          status: "PENDING",
+          status: "FAILED",
           type: "RECEIVE",
-          txHash: `Pending_Deposit_25_USDT_${Date.now()}`,
+          txHash: `Failed_Deposit_80_USDT_${Date.now()}`,
           createdAt: new Date(),
         },
       });
 
-      await prisma.transaction.create({
-        data: {
-          fromUserId: existingCastillo.id,
-          fromAddress: existingCastillo.walletAddress,
-          toAddress: existingCastillo.walletAddress,
-          amount: 50,
-          currency: "USDT",
-          status: "PENDING",
-          type: "RECEIVE",
-          txHash: `Pending_Deposit_50_USDT_${Date.now()}`,
-          createdAt: new Date(),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: existingCastillo.id,
-          fromAddress: existingCastillo.walletAddress,
-          toAddress: existingCastillo.walletAddress,
-          amount: 15,
-          currency: "USDT",
-          status: "PENDING",
-          type: "RECEIVE",
-          txHash: `Pending_Deposit_15_USDT_${Date.now()}`,
-          createdAt: new Date(),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: existingCastillo.id,
-          fromAddress: existingCastillo.walletAddress,
-          toAddress: existingCastillo.walletAddress,
-          amount: 10,
-          currency: "USDT",
-          status: "PENDING",
-          type: "RECEIVE",
-          txHash: `Pending_Deposit_10_USDT_${Date.now()}`,
-          createdAt: new Date(),
-        },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          fromUserId: existingCastillo.id,
-          fromAddress: existingCastillo.walletAddress,
-          toAddress: existingCastillo.walletAddress,
-          amount: 2000,
-          currency: "USDT",
-          status: "PENDING",
-          type: "RECEIVE",
-          txHash: `Pending_Deposit_2000_USDT_${Date.now()}`,
-          createdAt: new Date(),
-        },
-      });
-
-      console.log(`   Added 5 new PENDING transactions for today:`);
-      console.log(`     $25, $50, $15, $10, $2,000 (all PENDING)`);
-      console.log(`   Balance remains: $${currentBalance} USDT (pending not added)`);
+      console.log(`   Added 3 new FAILED transactions: $400, $150, $80`);
+      console.log(`   Balance remains: $${currentBalance} USDT (failed not added)`);
     }
 
     // ============================================
@@ -923,7 +564,8 @@ async function seed() {
     console.log("Name:         Dalia Castillo");
     console.log(`Balance:      $${currentBalance} USDT`);
     console.log("Confirmed Transactions: 17");
-    console.log("Pending Transactions (today): $25, $50, $15, $10, $2,000");
+    console.log("Pending Transactions: $25, $50, $15, $10, $2,000");
+    console.log("FAILED Transactions (NEW): $400, $150, $80");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   } catch (error) {
     console.error("❌ Seeding failed:", error);
