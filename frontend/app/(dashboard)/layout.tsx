@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import SupportChat from '@/components/SupportChat';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isHydrated } = useStore();
@@ -10,7 +11,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isChecking, setIsChecking] = useState(true);
   
   useEffect(() => {
-    // Wait for store to hydrate before checking auth
     if (isHydrated) {
       if (!user) {
         router.push('/login');
@@ -19,7 +19,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [user, router, isHydrated]);
   
-  // Show loading while checking authentication
   if (!isHydrated || isChecking) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -38,6 +37,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       className="min-h-screen bg-black"
     >
       {children}
+      <SupportChat />
     </motion.div>
   );
 }

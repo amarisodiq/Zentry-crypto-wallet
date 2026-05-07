@@ -507,6 +507,81 @@ app.post('/api/seed', async (req, res) => {
   }
 });
 
+// ==================== SUPPORT ROUTES ====================
+
+// User sends a support message
+app.post('/api/support/message', authenticate, async (req: any, res) => {
+  const { message } = req.body;
+  
+  if (!message || message.trim() === '') {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+  
+  const supportMessage = await prisma.supportMessage.create({
+    data: {
+      userId: req.user.id,
+      userEmail: req.user.email,
+      userName: req.user.name,
+      message: message,
+      status: 'PENDING'
+    }
+  });
+  
+  res.json({ success: true, message: supportMessage });
+});
+
+// User gets their own support messages
+app.get('/api/support/my-messages', authenticate, async (req: any, res) => {
+  const messages = await prisma.supportMessage.findMany({
+    where: { userId: req.user.id },
+    orderBy: { createdAt: 'desc' }
+  });
+  res.json(messages);
+});
+
+// Admin gets all support messages
+app.get('/api/admin/support/messages', authenticate, requireAdmin, async (req, res) => {
+  const messages = await prisma.supportMessage.findMany({
+    orderBy: { createdAt: 'desc' }
+  });
+  res.json(messages);
+});
+
+// Admin replies to a support message
+app.put('/api/admin/support/messages/:id/reply', authenticate, requireAdmin, async (req: any, res) => {
+  const { id } = req.params;
+  const { reply } = req.body;
+  
+  if (!reply || reply.trim() === '') {
+    return res.status(400).json({ error: 'Reply is required' });
+  }
+  
+  const updated = await prisma.supportMessage.update({
+    where: { id },
+    data: {
+      reply: reply,
+      status: 'REPLIED',
+      updatedAt: new Date()
+    }
+  });
+  
+  res.json({ success: true, message: updated });
+});
+
+// Admin marks message as resolved
+app.put('/api/admin/support/messages/:id/resolve', authenticate, requireAdmin, async (req: any, res) => {
+  const { id } = req.params;
+  
+  const updated = await prisma.supportMessage.update({
+    where: { id },
+    data: {
+      status: 'RESOLVED',
+      updatedAt: new Date()
+    }
+  });
+  
+  res.json({ success: true, message: updated });
+});
 // ==================== START SERVER ====================
 
 async function startServer() {

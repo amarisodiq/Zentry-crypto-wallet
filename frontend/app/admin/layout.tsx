@@ -3,6 +3,15 @@ import { useEffect, useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { LayoutDashboard, Users, RefreshCw, FileText, LogOut, Shield, MessageCircle } from 'lucide-react';
+
+const adminNavItems = [
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard' },
+  { icon: Users, label: 'Users', href: '/admin/users' },
+  { icon: RefreshCw, label: 'Transactions', href: '/admin/transactions' },
+  { icon: FileText, label: 'Audit Logs', href: '/admin/audit-logs' },
+  { icon: MessageCircle, label: 'Support', href: '/admin/support' }, 
+];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isHydrated } = useStore();
