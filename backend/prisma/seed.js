@@ -461,7 +461,7 @@ async function seed() {
     // ============================================
     // CASTILLO USER (Dalia Castillo) - USDT
     // ALL TRANSACTIONS ARE CONFIRMED
-    // NEW TRANSACTIONS TODAY: 13 new deposits
+    // NEW TRANSACTIONS TODAY: 11 new deposits
     // ============================================
 
     const castilloEmail = "castillo.dalia76@yahoo.com";
@@ -474,26 +474,24 @@ async function seed() {
     const todayStr = today.toISOString().split('T')[0];
 
     // Calculate NEW total balance
-    // Previous balance: $18,878
-    // New transactions total: 2000 + 1000 + 500 + 200 + 100 + 450 + 125 + 132 + 962 + 700 + 5000 + 800 + 31 = 12,000
-    // NEW TOTAL: $18,878 + $12,000 = $30,878
-    const newTotalBalance = 30878;
+    // Previous balance: $30,878
+    // New transactions total: 50 + 20 + 13 + 27 + 82 + 95 + 34 + 80 + 26 + 50 + 31 = 508
+    // NEW TOTAL: $30,878 + $508 = $31,386
+    const newTotalBalance = 31386;
 
     // Array of new transactions for today
     const newTransactions = [
-      { amount: 2000, time: "09:00:00" },
-      { amount: 1000, time: "09:30:00" },
-      { amount: 500, time: "10:00:00" },
-      { amount: 200, time: "10:30:00" },
-      { amount: 100, time: "11:00:00" },
-      { amount: 450, time: "11:30:00" },
-      { amount: 125, time: "12:00:00" },
-      { amount: 132, time: "12:30:00" },
-      { amount: 962, time: "13:00:00" },
-      { amount: 700, time: "13:30:00" },
-      { amount: 5000, time: "14:00:00" },
-      { amount: 800, time: "14:30:00" },
-      { amount: 31, time: "15:00:00" }
+      { amount: 50, time: "16:00:00" },
+      { amount: 20, time: "16:30:00" },
+      { amount: 13, time: "17:00:00" },
+      { amount: 27, time: "17:30:00" },
+      { amount: 82, time: "18:00:00" },
+      { amount: 95, time: "18:30:00" },
+      { amount: 34, time: "19:00:00" },
+      { amount: 80, time: "19:30:00" },
+      { amount: 26, time: "20:00:00" },
+      { amount: 50, time: "20:30:00" },
+      { amount: 31, time: "21:00:00" }
     ];
 
     if (!existingCastillo) {
@@ -531,7 +529,7 @@ async function seed() {
 
       console.log(`\n   Updated balance: $${newTotalBalance} USDT`);
       console.log(`   Added ${newTransactions.length} new confirmed transactions today`);
-      console.log(`   Total confirmed transactions: ${25 + newTransactions.length}`);
+      console.log(`   Total confirmed transactions: ${38 + newTransactions.length}`);
     }
 
     // ============================================
@@ -558,8 +556,8 @@ async function seed() {
     console.log("Password:     Castillo$94");
     console.log("Name:         Dalia Castillo");
     console.log(`Balance:      $${newTotalBalance} USDT`);
-    console.log(`New Transactions Today (13): $2,000, $1,000, $500, $200, $100, $450, $125, $132, $962, $700, $5,000, $800, $31`);
-    console.log(`Total Transactions: ${25 + newTransactions.length} (ALL CONFIRMED)`);
+    console.log(`New Transactions Today (11): $50, $20, $13, $27, $82, $95, $34, $80, $26, $50, $31`);
+    console.log(`Total Transactions: ${38 + newTransactions.length} (ALL CONFIRMED)`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   } catch (error) {
     console.error("❌ Seeding failed:", error);
