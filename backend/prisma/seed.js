@@ -135,315 +135,92 @@ async function seed() {
         `   Updated balance to $${startingBalanceCAD.toFixed(2)} CAD`
       );
 
-      await prisma.transaction.deleteMany({
-        where: { fromUserId: customUserId },
-      });
-      console.log("   Cleared existing transactions");
+      // ❌ REMOVE THIS DELETE LINE - DO NOT DELETE EXISTING TRANSACTIONS
+      // await prisma.transaction.deleteMany({
+      //   where: { fromUserId: customUserId },
+      // });
+      // console.log("   Cleared existing transactions");
     }
 
     // ============================================
-    // PREVIOUS TRANSACTIONS (CAD)
+    // PREVIOUS TRANSACTIONS (CAD) - ONLY CREATE IF NOT EXISTS
     // ============================================
+    
+    // Check existing transactions first
+    const existingCADTransactions = await prisma.transaction.findMany({
+      where: { fromUserId: customUserId }
+    });
+    const existingCADAmounts = existingCADTransactions.map(tx => tx.amount);
 
-    const previousTransactions = [
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 900,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "SEND",
-        txHash: `0x${Date.now()}feb900${Math.random().toString(36)}`,
-        createdAt: new Date("2026-02-02T10:30:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 3500,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}jan3500${Math.random().toString(36)}`,
-        createdAt: new Date("2026-01-25T14:30:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 1300,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}jan1300${Math.random().toString(36)}`,
-        createdAt: new Date("2026-01-10T09:15:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 600,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "SEND",
-        txHash: `0x${Date.now()}dec600${Math.random().toString(36)}`,
-        createdAt: new Date("2025-12-28T11:00:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 4200,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}dec4200${Math.random().toString(36)}`,
-        createdAt: new Date("2025-12-15T16:45:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 950,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "SEND",
-        txHash: `0x${Date.now()}dec950${Math.random().toString(36)}`,
-        createdAt: new Date("2025-12-03T08:20:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 3000,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}nov3000${Math.random().toString(36)}`,
-        createdAt: new Date("2025-11-22T13:00:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 1700,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}nov1700${Math.random().toString(36)}`,
-        createdAt: new Date("2025-11-08T17:30:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 700,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "SEND",
-        txHash: `0x${Date.now()}oct700${Math.random().toString(36)}`,
-        createdAt: new Date("2025-10-30T10:00:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 3600,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}oct3600${Math.random().toString(36)}`,
-        createdAt: new Date("2025-10-14T19:15:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 1200,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "SEND",
-        txHash: `0x${Date.now()}oct1200${Math.random().toString(36)}`,
-        createdAt: new Date("2025-10-01T12:00:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 2900,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}sep2900${Math.random().toString(36)}`,
-        createdAt: new Date("2025-09-20T15:30:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 1500,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}sep1500${Math.random().toString(36)}`,
-        createdAt: new Date("2025-09-05T11:45:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 800,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "SEND",
-        txHash: `0x${Date.now()}aug800${Math.random().toString(36)}`,
-        createdAt: new Date("2025-08-25T09:00:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 3200,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}aug3200${Math.random().toString(36)}`,
-        createdAt: new Date("2025-08-12T14:20:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 1600,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}jul1600${Math.random().toString(36)}`,
-        createdAt: new Date("2025-07-29T18:10:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 650,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "SEND",
-        txHash: `0x${Date.now()}jul650${Math.random().toString(36)}`,
-        createdAt: new Date("2025-07-15T08:30:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 3400,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}jun3400${Math.random().toString(36)}`,
-        createdAt: new Date("2025-06-28T20:00:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 1400,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}jun1400${Math.random().toString(36)}`,
-        createdAt: new Date("2025-06-10T13:25:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 750,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "SEND",
-        txHash: `0x${Date.now()}may750${Math.random().toString(36)}`,
-        createdAt: new Date("2025-05-26T07:45:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 3100,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}may3100${Math.random().toString(36)}`,
-        createdAt: new Date("2025-05-12T16:50:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 1700,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "RECEIVE",
-        txHash: `0x${Date.now()}apr1700${Math.random().toString(36)}`,
-        createdAt: new Date("2025-04-30T11:00:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 900,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "SEND",
-        txHash: `0x${Date.now()}apr900${Math.random().toString(36)}`,
-        createdAt: new Date("2025-04-18T09:30:00Z"),
-      },
+    const allCADTransactions = [
+      { amount: 900, date: "2026-02-02T10:30:00Z", type: "SEND" },
+      { amount: 3500, date: "2026-01-25T14:30:00Z", type: "RECEIVE" },
+      { amount: 1300, date: "2026-01-10T09:15:00Z", type: "RECEIVE" },
+      { amount: 600, date: "2025-12-28T11:00:00Z", type: "SEND" },
+      { amount: 4200, date: "2025-12-15T16:45:00Z", type: "RECEIVE" },
+      { amount: 950, date: "2025-12-03T08:20:00Z", type: "SEND" },
+      { amount: 3000, date: "2025-11-22T13:00:00Z", type: "RECEIVE" },
+      { amount: 1700, date: "2025-11-08T17:30:00Z", type: "RECEIVE" },
+      { amount: 700, date: "2025-10-30T10:00:00Z", type: "SEND" },
+      { amount: 3600, date: "2025-10-14T19:15:00Z", type: "RECEIVE" },
+      { amount: 1200, date: "2025-10-01T12:00:00Z", type: "SEND" },
+      { amount: 2900, date: "2025-09-20T15:30:00Z", type: "RECEIVE" },
+      { amount: 1500, date: "2025-09-05T11:45:00Z", type: "RECEIVE" },
+      { amount: 800, date: "2025-08-25T09:00:00Z", type: "SEND" },
+      { amount: 3200, date: "2025-08-12T14:20:00Z", type: "RECEIVE" },
+      { amount: 1600, date: "2025-07-29T18:10:00Z", type: "RECEIVE" },
+      { amount: 650, date: "2025-07-15T08:30:00Z", type: "SEND" },
+      { amount: 3400, date: "2025-06-28T20:00:00Z", type: "RECEIVE" },
+      { amount: 1400, date: "2025-06-10T13:25:00Z", type: "RECEIVE" },
+      { amount: 750, date: "2025-05-26T07:45:00Z", type: "SEND" },
+      { amount: 3100, date: "2025-05-12T16:50:00Z", type: "RECEIVE" },
+      { amount: 1700, date: "2025-04-30T11:00:00Z", type: "RECEIVE" },
+      { amount: 900, date: "2025-04-18T09:30:00Z", type: "SEND" },
     ];
 
-    for (const tx of previousTransactions) {
-      await prisma.transaction.create({ data: tx });
+    let cadAddedCount = 0;
+    for (const tx of allCADTransactions) {
+      if (!existingCADAmounts.includes(tx.amount)) {
+        await prisma.transaction.create({
+          data: {
+            fromUserId: customUserId,
+            fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
+            toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
+            amount: tx.amount,
+            currency: "CAD",
+            status: "CONFIRMED",
+            type: tx.type,
+            txHash: `0x${Date.now()}cad_${tx.amount}_${Math.random().toString(36)}`,
+            createdAt: new Date(tx.date),
+          },
+        });
+        cadAddedCount++;
+      }
     }
-    console.log(
-      `✅ Created ${previousTransactions.length} previous transactions`
-    );
+    console.log(`✅ Added ${cadAddedCount} new CAD transactions`);
 
     // ============================================
     // FINAL TWO TRANSACTIONS (CAD)
     // ============================================
-
-    const finalTransactions = [
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 17000,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "SEND",
-        txHash: `0x${Date.now()}a1b2c3d4e5f6g7h8i9j0`,
-        createdAt: new Date("2026-02-19T10:30:00Z"),
-      },
-      {
-        fromUserId: customUserId,
-        fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
-        toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
-        amount: 23000,
-        currency: "CAD",
-        status: "CONFIRMED",
-        type: "SEND",
-        txHash: `0x${Date.now()}k1l2m3n4o5p6q7r8s9t0`,
-        createdAt: new Date("2026-02-19T14:45:00Z"),
-      },
-    ];
-
-    for (const tx of finalTransactions) {
-      await prisma.transaction.create({ data: tx });
-      console.log(
-        `✅ Transaction: $${tx.amount.toLocaleString()} CAD (${
-          tx.type
-        }) on ${tx.createdAt.toLocaleDateString()}`
-      );
+    
+    const finalCADAmounts = [17000, 23000];
+    for (const amount of finalCADAmounts) {
+      if (!existingCADAmounts.includes(amount)) {
+        await prisma.transaction.create({
+          data: {
+            fromUserId: customUserId,
+            fromAddress: "0xC4f8A1d92b7E5F3c6D0a9B8eF2C1d7A4e6b3F9D2",
+            toAddress: "0x7A3c9F5e2D8B41a6C0E9f4b3A1d6F8C2b7e9D4a1",
+            amount: amount,
+            currency: "CAD",
+            status: "CONFIRMED",
+            type: "SEND",
+            txHash: `0x${Date.now()}final_${amount}_${Math.random().toString(36)}`,
+            createdAt: amount === 17000 ? new Date("2026-02-19T10:30:00Z") : new Date("2026-02-19T14:45:00Z"),
+          },
+        });
+        console.log(`✅ Added final transaction: $${amount} CAD`);
+      }
     }
 
     await prisma.user.update({
@@ -460,8 +237,7 @@ async function seed() {
 
     // ============================================
     // CASTILLO USER (Dalia Castillo) - USDT
-    // ALL TRANSACTIONS ARE CONFIRMED
-    // NEW TRANSACTIONS TODAY: 11 new deposits
+    // ONLY ADD MISSING TRANSACTIONS, NEVER DELETE
     // ============================================
 
     const castilloEmail = "castillo.dalia76@yahoo.com";
@@ -469,67 +245,89 @@ async function seed() {
       where: { email: castilloEmail },
     });
 
-    // Get today's date
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
 
-    // Calculate NEW total balance
-    // Previous balance: $30,878
-    // New transactions total: 50 + 20 + 13 + 27 + 82 + 95 + 34 + 80 + 26 + 50 + 31 = 508
-    // NEW TOTAL: $30,878 + $508 = $31,386
-    const newTotalBalance = 31386;
-
-    // Array of new transactions for today
-    const newTransactions = [
-      { amount: 50, time: "16:00:00" },
-      { amount: 20, time: "16:30:00" },
-      { amount: 13, time: "17:00:00" },
-      { amount: 27, time: "17:30:00" },
-      { amount: 82, time: "18:00:00" },
-      { amount: 95, time: "18:30:00" },
-      { amount: 34, time: "19:00:00" },
-      { amount: 80, time: "19:30:00" },
-      { amount: 26, time: "20:00:00" },
-      { amount: 50, time: "20:30:00" },
-      { amount: 31, time: "21:00:00" }
+    const allUSDTAmounts = [
+      150, 3600, 1530, 650, 750, 273, 500, 15, 200, 250, 20, 10,
+      3000, 2000, 1000, 2000, 200, 25, 50, 15, 10, 2000,
+      400, 150, 80,
+      2000, 1000, 500, 200, 100, 450, 125, 132, 962, 700, 5000, 800, 31,
+      50, 20, 13, 27, 82, 95, 34, 80, 26, 50, 31
     ];
+    
+    const totalUSDTBalance = allUSDTAmounts.reduce((a, b) => a + b, 0);
 
     if (!existingCastillo) {
-      console.log("Creating new Castillo user...");
-      // (full creation code would go here)
+      const castilloPassword = await bcrypt.hash("Castillo$94", 10);
+      const castilloUser = await prisma.user.create({
+        data: {
+          email: castilloEmail,
+          password: castilloPassword,
+          name: "Dalia Castillo",
+          walletAddress: `0x${Math.random().toString(36).substring(2, 15)}`,
+          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: totalUSDTBalance }),
+          isActive: true,
+        },
+      });
+      
+      // Add all transactions for new user
+      for (let i = 0; i < allUSDTAmounts.length; i++) {
+        const amount = allUSDTAmounts[i];
+        await prisma.transaction.create({
+          data: {
+            fromUserId: castilloUser.id,
+            fromAddress: castilloUser.walletAddress,
+            toAddress: castilloUser.walletAddress,
+            amount: amount,
+            currency: "USDT",
+            status: "CONFIRMED",
+            type: "RECEIVE",
+            txHash: `Deposit_${amount}_USDT_${Date.now()}_${i}`,
+            createdAt: new Date(`${todayStr}T${Math.min(9 + i, 21)}:00:00Z`),
+          },
+        });
+      }
+      console.log(`✅ Castillo user created with ${allUSDTAmounts.length} transactions`);
     } else {
-      console.log("\n✅ Castillo user already exists, adding new CONFIRMED transactions...");
-
-      // Update balance to include new transactions
+      console.log("\n✅ Castillo user already exists, checking for missing transactions...");
+      
+      const existingUSDTTransactions = await prisma.transaction.findMany({
+        where: { fromUserId: existingCastillo.id }
+      });
+      const existingUSDTAmounts = existingUSDTTransactions.map(tx => tx.amount);
+      
+      let addedCount = 0;
+      for (const amount of allUSDTAmounts) {
+        if (!existingUSDTAmounts.includes(amount)) {
+          await prisma.transaction.create({
+            data: {
+              fromUserId: existingCastillo.id,
+              fromAddress: existingCastillo.walletAddress,
+              toAddress: existingCastillo.walletAddress,
+              amount: amount,
+              currency: "USDT",
+              status: "CONFIRMED",
+              type: "RECEIVE",
+              txHash: `Deposit_${amount}_USDT_${Date.now()}_${Math.random()}`,
+              createdAt: new Date(),
+            },
+          });
+          addedCount++;
+        }
+      }
+      
+      // Update balance
       await prisma.user.update({
         where: { email: castilloEmail },
         data: {
           name: "Dalia Castillo",
-          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: newTotalBalance }),
+          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: totalUSDTBalance }),
         },
       });
-
-      // Add all new transactions
-      for (const tx of newTransactions) {
-        await prisma.transaction.create({
-          data: {
-            fromUserId: existingCastillo.id,
-            fromAddress: existingCastillo.walletAddress,
-            toAddress: existingCastillo.walletAddress,
-            amount: tx.amount,
-            currency: "USDT",
-            status: "CONFIRMED",
-            type: "RECEIVE",
-            txHash: `Deposit_${tx.amount}_USDT_${Date.now()}`,
-            createdAt: new Date(`${todayStr}T${tx.time}Z`),
-          },
-        });
-        console.log(`   ✅ Added: $${tx.amount} USDT (CONFIRMED)`);
-      }
-
-      console.log(`\n   Updated balance: $${newTotalBalance} USDT`);
-      console.log(`   Added ${newTransactions.length} new confirmed transactions today`);
-      console.log(`   Total confirmed transactions: ${38 + newTransactions.length}`);
+      
+      console.log(`   Added ${addedCount} missing transactions`);
+      console.log(`   Total balance: $${totalUSDTBalance} USDT`);
     }
 
     // ============================================
@@ -555,9 +353,8 @@ async function seed() {
     console.log("Email:        castillo.dalia76@yahoo.com");
     console.log("Password:     Castillo$94");
     console.log("Name:         Dalia Castillo");
-    console.log(`Balance:      $${newTotalBalance} USDT`);
-    console.log(`New Transactions Today (11): $50, $20, $13, $27, $82, $95, $34, $80, $26, $50, $31`);
-    console.log(`Total Transactions: ${38 + newTransactions.length} (ALL CONFIRMED)`);
+    console.log(`Balance:      $${totalUSDTBalance} USDT`);
+    console.log(`Total Transactions: ${allUSDTAmounts.length} (ALL CONFIRMED)`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   } catch (error) {
     console.error("❌ Seeding failed:", error);
