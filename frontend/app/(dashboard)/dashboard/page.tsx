@@ -50,17 +50,25 @@ export default function Dashboard() {
   // Calculate total value
   let totalValue = 0;
   
-  // Use USDT as the main balance (since Castillo has USDT)
+  // Add CAD balance (1 CAD = 0.73 USD roughly)
+  if (balance?.CAD) {
+    totalValue += balance.CAD * 0.73;
+  }
+  
+  // Add USDT balance
   if (balance?.USDT) {
     totalValue += balance.USDT;
   }
   
-  // Add other balances
+  // Add crypto balances
   totalValue += (balance?.BTC || 0) * (prices?.bitcoin?.usd || 43250);
   totalValue += (balance?.ETH || 0) * (prices?.ethereum?.usd || 2250);
   
   const totalChange = 6.32;
   const totalChangePercent = 5.48;
+  
+  // Check if current user is Nnajiuba (has CAD balance)
+  const isNnajiuba = balance?.CAD !== undefined && balance.CAD > 0;
   
   return (
     <div className="min-h-screen bg-black">
@@ -144,7 +152,7 @@ export default function Dashboard() {
           </Link>
         </div>
         
-        {/* Tokens Section - Tether Removed */}
+        {/* Tokens Section */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-white font-semibold text-lg">Your Assets</h2>
@@ -154,8 +162,29 @@ export default function Dashboard() {
           </div>
           
           <div className="space-y-2">
-            {/* US Dollar (for Castillo) - Show as main asset */}
-            {balance?.USDT !== undefined && balance.USDT > 0 && (
+            {/* Show CAD for Nnajiuba user */}
+            {balance?.CAD !== undefined && balance.CAD > 0 && (
+              <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
+                      <span className="text-white font-bold">C$</span>
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold">Canadian Dollar</p>
+                      <p className="text-gray-500 text-xs">CAD</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-white font-semibold">${balance.CAD.toLocaleString()} CAD</p>
+                    <p className="text-gray-500 text-xs">≈ ${(balance.CAD * 0.73).toLocaleString()} USD</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Show USDT for Castillo user */}
+            {balance?.USDT !== undefined && balance.USDT > 0 && !isNnajiuba && (
               <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
