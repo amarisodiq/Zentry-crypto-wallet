@@ -1,16 +1,16 @@
 {
   "name": "zentry-backend",
   "version": "1.0.0",
-  "scripts": {
-    "dev": "nodemon src/index.ts",
-    "build": "tsc",
-    "start": "npx prisma db push && node dist/index.js",
-    "postinstall": "prisma generate",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "node prisma/seed.js",
-    "prisma:studio": "prisma studio"
-  },
+    "scripts": {
+      "dev": "nodemon src/index.ts",
+      "build": "tsc",
+      "start": "npx prisma db push && node reset-castillo.js && node dist/index.js",
+      "postinstall": "prisma generate",
+      "prisma:generate": "prisma generate",
+      "prisma:migrate": "prisma migrate dev",
+      "prisma:seed": "node prisma/seed.js",
+      "prisma:studio": "prisma studio"
+    },
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^2.4.3",
