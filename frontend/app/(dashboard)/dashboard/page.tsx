@@ -20,12 +20,11 @@ interface Balance {
   BTC: number;
   ETH: number;
   USDT: number;
-  USD?: number;
   CAD?: number;
 }
 
 export default function Dashboard() {
-  const { user, fetchPrices, prices, transactions, fetchTransactions } = useStore();
+  const { user, fetchPrices, prices, fetchTransactions } = useStore();
   const [balance, setBalance] = useState<Balance | null>(null);
   const [showBalance, setShowBalance] = useState(true);
   
@@ -47,28 +46,29 @@ export default function Dashboard() {
     }
   }, [user?.balance]);
   
-  // Calculate total value
+  // Calculate total value in USD
   let totalValue = 0;
   
-  // Add CAD balance (1 CAD = 0.73 USD roughly)
-  if (balance?.CAD) {
-    totalValue += balance.CAD * 0.73;
+  // Safe check for CAD and USDT
+  const cadAmount = balance?.CAD ?? 0;
+  const usdtAmount = balance?.USDT ?? 0;
+  
+  const hasCAD = cadAmount > 0;
+  const hasUSDT = usdtAmount > 0;
+  
+  if (hasCAD) {
+    // Convert CAD to USD (1 CAD = 0.73 USD)
+    totalValue = cadAmount * 0.73;
+  } else if (hasUSDT) {
+    totalValue = usdtAmount;
   }
   
-  // Add USDT balance
-  if (balance?.USDT) {
-    totalValue += balance.USDT;
-  }
-  
-  // Add crypto balances
+  // Add crypto balances if any
   totalValue += (balance?.BTC || 0) * (prices?.bitcoin?.usd || 43250);
   totalValue += (balance?.ETH || 0) * (prices?.ethereum?.usd || 2250);
   
   const totalChange = 6.32;
   const totalChangePercent = 5.48;
-  
-  // Check if current user is Nnajiuba (has CAD balance)
-  const isNnajiuba = balance?.CAD !== undefined && balance.CAD > 0;
   
   return (
     <div className="min-h-screen bg-black">
@@ -162,8 +162,8 @@ export default function Dashboard() {
           </div>
           
           <div className="space-y-2">
-            {/* Show CAD for Nnajiuba user */}
-            {balance?.CAD !== undefined && balance.CAD > 0 && (
+            {/* Show CAD for Nnajiuba */}
+            {hasCAD && (
               <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
@@ -176,15 +176,15 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-semibold">${balance.CAD.toLocaleString()} CAD</p>
-                    <p className="text-gray-500 text-xs">≈ ${(balance.CAD * 0.73).toLocaleString()} USD</p>
+                    <p className="text-white font-semibold">${cadAmount.toLocaleString()} CAD</p>
+                    <p className="text-gray-500 text-xs">≈ ${(cadAmount * 0.73).toLocaleString()} USD</p>
                   </div>
                 </div>
               </div>
             )}
             
-            {/* Show USDT for Castillo user */}
-            {balance?.USDT !== undefined && balance.USDT > 0 && !isNnajiuba && (
+            {/* Show USDT for Castillo */}
+            {hasUSDT && !hasCAD && (
               <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
@@ -197,14 +197,14 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-semibold">{balance.USDT.toLocaleString()} USDT</p>
-                    <p className="text-gray-500 text-xs">${balance.USDT.toLocaleString()} USD</p>
+                    <p className="text-white font-semibold">{usdtAmount.toLocaleString()} USDT</p>
+                    <p className="text-gray-500 text-xs">${usdtAmount.toLocaleString()} USD</p>
                   </div>
                 </div>
               </div>
             )}
             
-            {/* Ethereum */}
+            {/* Ethereum - always show */}
             <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -218,12 +218,12 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-white font-semibold">{balance?.ETH?.toFixed(4) || '0.0000'} ETH</p>
-                  <p className="text-gray-500 text-xs">${((balance?.ETH || 0) * (prices?.ethereum?.usd || 2250)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                  <p className="text-gray-500 text-xs">${((balance?.ETH || 0) * (prices?.ethereum?.usd || 2250)).toLocaleString()}</p>
                 </div>
               </div>
             </div>
             
-            {/* Bitcoin */}
+            {/* Bitcoin - always show */}
             <div className="bg-[#1a1a1a] rounded-xl p-4 hover:bg-[#222] transition cursor-pointer">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -237,7 +237,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-white font-semibold">{balance?.BTC?.toFixed(4) || '0.0000'} BTC</p>
-                  <p className="text-gray-500 text-xs">${((balance?.BTC || 0) * (prices?.bitcoin?.usd || 43250)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                  <p className="text-gray-500 text-xs">${((balance?.BTC || 0) * (prices?.bitcoin?.usd || 43250)).toLocaleString()}</p>
                 </div>
               </div>
             </div>
