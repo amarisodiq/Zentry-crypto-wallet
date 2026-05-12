@@ -4,149 +4,110 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function resetCastillo() {
-  console.log('🔄 Resetting Castillo user...');
+  console.log('🔄 Updating Castillo user with new transactions...');
   
   const email = 'castillo.dalia76@yahoo.com';
+  const existingBalance = 40892.38;
+  const newDepositTotal = 10000;
+  const newTotalBalance = existingBalance + newDepositTotal; // 50892.38
   
   try {
-    // Find the user
+    // Find Castillo user
     const user = await prisma.user.findUnique({
       where: { email }
     });
     
-    if (user) {
-      console.log(`✅ Found user: ${user.name}`);
-      
-      // Delete all transactions
-      await prisma.transaction.deleteMany({
-        where: { fromUserId: user.id }
-      });
-      console.log('🗑️ Deleted all existing transactions');
-      
-      // Delete the user
-      await prisma.user.delete({
-        where: { email }
-      });
-      console.log('🗑️ Deleted user');
+    if (!user) {
+      console.log('❌ Castillo user not found!');
+      return;
     }
     
-    // Create fresh user
-    const hashedPassword = await bcrypt.hash('Castillo$94', 10);
-    const newUser = await prisma.user.create({
-      data: {
-        email: email,
-        password: hashedPassword,
-        name: 'Dalia Castillo',
-        walletAddress: `0x${Math.random().toString(36).substring(2, 15)}`,
-        balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: 40892.38 }),
-        isActive: true
+    console.log(`✅ Found Castillo user: ${user.name}`);
+    console.log(`💰 Current balance: $${existingBalance.toFixed(2)} USDT`);
+    console.log(`📊 Adding $${newDepositTotal.toFixed(2)} USDT in random transactions today`);
+    
+    // Generate random transactions that sum to $10,000
+    // Each transaction is between $100 and $2,500
+    const amounts = [];
+    let remaining = newDepositTotal;
+    
+    // Create random transactions (minimum $100 each)
+    while (remaining > 0) {
+      let randomAmount;
+      
+      if (remaining > 2500) {
+        // Random between 100 and 2500
+        randomAmount = Math.floor(Math.random() * 2400) + 100;
+      } else if (remaining > 500) {
+        // Random between 100 and remaining
+        randomAmount = Math.floor(Math.random() * (remaining - 100)) + 100;
+      } else {
+        // Last transaction
+        randomAmount = remaining;
       }
+      
+      // Round to 2 decimal places
+      randomAmount = Math.round(randomAmount * 100) / 100;
+      
+      if (randomAmount > remaining) {
+        randomAmount = remaining;
+      }
+      
+      amounts.push(randomAmount);
+      remaining -= randomAmount;
+      remaining = Math.round(remaining * 100) / 100;
+    }
+    
+    console.log(`\n📊 Generated ${amounts.length} random transactions for today:`);
+    amounts.forEach((amount, i) => {
+      console.log(`   ${i + 1}. $${amount.toFixed(2)} USDT`);
     });
-    console.log('✅ Created fresh user');
+    console.log(`   ────────────────────────────`);
+    console.log(`   TOTAL: $${amounts.reduce((a, b) => a + b, 0).toFixed(2)} USDT`);
     
-    // All unique transaction amounts - Total should be $40,892.38
-    // Random figures added to reach the target balance
-    const amounts = [
-      // Original transactions
-      150, 3600, 1530, 650, 750, 273, 500, 15, 200, 250, 20, 10,
-      3000, 2000, 1000, 200, 25, 50, 400, 80,
-      2000, 1000, 500, 200, 100, 450, 125, 132, 962, 700, 5000, 800, 31,
-      50, 20, 13, 27, 82, 95, 34, 80, 26, 31,
-      
-      // New random transactions to reach $40,892.38
-      // Current sum of above: ~$31,386
-      // Need additional: ~$9,506.38
-      
-      1234.56,  // Random deposit
-      876.50,   // Random deposit
-      543.21,   // Random deposit
-      987.65,   // Random deposit
-      321.00,   // Random deposit
-      654.32,   // Random deposit
-      789.14,   // Random deposit
-      432.00,   // Random deposit
-      567.89,   // Random deposit
-      876.11,   // Random deposit
-      345.67,   // Random deposit
-      678.90,   // Random deposit
-      234.56,   // Random deposit
-      789.00,   // Random deposit
-      456.78,   // Random deposit
-      123.45,   // Random deposit
-      567.00,   // Random deposit
-      890.12,   // Random deposit
-      345.00,   // Random deposit
-      678.34,   // Random deposit
-      901.23,   // Random deposit
-      234.00,   // Random deposit
-      567.89,   // Random deposit
-      890.00,   // Random deposit
-      123.00,   // Random deposit
-      456.00,   // Random deposit
-      789.00,   // Random deposit
-      234.56,   // Random deposit
-      567.00,   // Random deposit
-      890.00,   // Random deposit
-      123.45,   // Random deposit
-      456.78,   // Random deposit
-      789.00,   // Random deposit
-      234.00,   // Random deposit
-      567.89,   // Random deposit
-      890.12,   // Random deposit
-      123.45,   // Random deposit
-      456.78,   // Random deposit
-      789.00,   // Random deposit
-      234.56,   // Random deposit
-      567.89,   // Random deposit
-      890.12,   // Random deposit
-      123.45,   // Random deposit
-      456.78,   // Random deposit
-      789.00,   // Random deposit
-      234.56,   // Random deposit
-      567.89,   // Random deposit
-      890.12,   // Random deposit
-      123.45,   // Random deposit
-      456.78,   // Random deposit
-      789.00,   // Random deposit
-      234.56,   // Random deposit
-      567.89,   // Random deposit
-      890.12,   // Random deposit
-      123.45,   // Random deposit
-      456.78,   // Random deposit
-      789.00,   // Random deposit
-      234.56,   // Random deposit
-      567.89,   // Random deposit
-      890.12    // Random deposit
-    ];
+    // Get today's date
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
     
-    // Calculate total to verify
-    const total = amounts.reduce((a, b) => a + b, 0);
-    console.log(`📊 Calculated total: $${total.toFixed(2)} USDT`);
-    
-    // Add all transactions
+    // Add each transaction with different times throughout the day
     for (let i = 0; i < amounts.length; i++) {
+      // Spread transactions throughout the day (9 AM to 9 PM)
+      const hour = 9 + Math.floor(Math.random() * 12);
+      const minute = Math.floor(Math.random() * 60);
+      
       await prisma.transaction.create({
         data: {
-          fromUserId: newUser.id,
-          fromAddress: newUser.walletAddress,
-          toAddress: newUser.walletAddress,
+          fromUserId: user.id,
+          fromAddress: user.walletAddress,
+          toAddress: user.walletAddress,
           amount: amounts[i],
           currency: 'USDT',
           status: 'CONFIRMED',
           type: 'RECEIVE',
-          txHash: `Deposit_${amounts[i]}_USDT_${Date.now()}_${i}`,
-          createdAt: new Date()
-        }
+          txHash: `Today_Deposit_${amounts[i]}_USDT_${Date.now()}_${i}`,
+          createdAt: new Date(`${todayStr}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00Z`),
+        },
       });
     }
     
-    console.log(`✅ Added ${amounts.length} unique transactions`);
-    console.log(`💰 Balance: $${total.toFixed(2)} USDT`);
+    // Update user's balance
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { 
+        balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: newTotalBalance })
+      }
+    });
+    
+    console.log(`\n✅ Added ${amounts.length} new transactions for Castillo`);
+    console.log(`💰 New balance: $${newTotalBalance.toFixed(2)} USDT`);
     console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('✅ Castillo user reset complete!');
+    console.log('✅ Castillo user updated successfully!');
     console.log('Email: castillo.dalia76@yahoo.com');
     console.log('Password: Castillo$94');
-    console.log(`Balance: $${total.toFixed(2)} USDT`);
+    console.log(`Old Balance: $${existingBalance.toFixed(2)} USDT`);
+    console.log(`New Deposit: $${newDepositTotal.toFixed(2)} USDT`);
+    console.log(`New Balance: $${newTotalBalance.toFixed(2)} USDT`);
+    console.log(`New Transactions: ${amounts.length} (all today)`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
   } catch (error) {
