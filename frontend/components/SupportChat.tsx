@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useStore } from '@/store/useStore';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, CheckCircle, Clock, AlertCircle, ChevronRight } from 'lucide-react';
+import { MessageCircle, X, Send, CheckCircle, Clock, Reply } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface SupportMessage {
@@ -22,6 +22,8 @@ export default function SupportChat() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
   const { user, token } = useStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isAdmin = user?.role === 'ADMIN';
@@ -50,7 +52,11 @@ export default function SupportChat() {
       const { data } = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setMessages(data);
+      // Sort messages: oldest first (ascending order) - so newest at bottom
+      const sortedMessages = [...data].sort((a, b) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      setMessages(sortedMessages);
     } catch (error) {
       console.error('Failed to fetch messages:', error);
     } finally {
@@ -70,9 +76,10 @@ export default function SupportChat() {
         { message: newMessage },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success('Message sent! Support will reply soon.');
+      toast.success('Message sent!');
       setNewMessage('');
-      fetchMessages();
+      await fetchMessages();
+      setTimeout(() => scrollToBottom(), 100);
     } catch (error) {
       toast.error('Failed to send message');
     } finally {
@@ -80,16 +87,52 @@ export default function SupportChat() {
     }
   };
 
-  const sendReply = async (messageId: string, replyText: string) => {
+  // Admin sends a reply to a specific user message
+  const sendReply = async (messageId: string) => {
+    if (!replyText.trim()) {
+      toast.error('Please enter a reply');
+      return;
+    }
+
     try {
       await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/admin/support/messages/${messageId}/reply`,
         { reply: replyText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success('Reply sent!');
-      fetchMessages();
+      setReplyingTo(null);
+      setReplyText('');
+      await fetchMessages();
+      setTimeout(() => scrollToBottom(), 100);
     } catch (error) {
       toast.error('Failed to send reply');
+    }
+  };
+
+  // Admin sends an independent message (new conversation)
+  const sendAdminMessage = async () => {
+    if (!newMessage.trim()) {
+      toast.error('Please enter a message');
+      return;
+    }
+
+    setSending(true);
+    try {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/support/send`,
+        { 
+          message: newMessage,
+          userId: 'all'
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Message sent to users!');
+      setNewMessage('');
+      await fetchMessages();
+      setTimeout(() => scrollToBottom(), 100);
+    } catch (error) {
+      toast.error('Failed to send message');
+    } finally {
+      setSending(false);
     }
   };
 
@@ -100,7 +143,7 @@ export default function SupportChat() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success('Message marked as resolved');
-      fetchMessages();
+      await fetchMessages();
     } catch (error) {
       toast.error('Failed to resolve message');
     }
@@ -136,7 +179,7 @@ export default function SupportChat() {
             initial={{ opacity: 0, y: 100, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 100, scale: 0.9 }}
-            className="fixed bottom-32 right-4 z-50 w-[380px] h-[550px] bg-black border border-gray-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-32 right-4 z-50 w-[450px] h-[600px] bg-black border border-gray-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 flex justify-between items-center">
@@ -157,7 +200,7 @@ export default function SupportChat() {
               </p>
             </div>
 
-            {/* Messages Area */}
+            {/* Messages Area - Oldest at top, newest at bottom */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {loading ? (
                 <div className="text-center text-gray-500">Loading messages...</div>
@@ -172,7 +215,14 @@ export default function SupportChat() {
                     {/* User Message */}
                     <div className="bg-[#1a1a1a] rounded-lg p-3">
                       <div className="flex justify-between items-start mb-2">
-                        <span className="text-blue-400 text-xs font-semibold">You</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-blue-400 text-xs font-semibold">
+                            {isAdmin ? msg.userName : 'You'}
+                          </span>
+                          {isAdmin && (
+                            <span className="text-gray-500 text-xs">{msg.userEmail}</span>
+                          )}
+                        </div>
                         {getStatusBadge(msg.status)}
                       </div>
                       <p className="text-white text-sm">{msg.message}</p>
@@ -181,7 +231,7 @@ export default function SupportChat() {
                       </p>
                     </div>
 
-                    {/* Admin Reply */}
+                    {/* Admin Reply (if any) */}
                     {msg.reply && (
                       <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 ml-4">
                         <div className="flex justify-between items-start mb-2">
@@ -191,26 +241,49 @@ export default function SupportChat() {
                       </div>
                     )}
 
-                    {/* Admin Actions (for admin view) */}
-                    {isAdmin && msg.status !== 'RESOLVED' && (
+                    {/* Reply Input for Admin */}
+                    {isAdmin && replyingTo === msg.id && (
                       <div className="flex gap-2 mt-2 ml-4">
                         <input
                           type="text"
-                          placeholder="Type reply..."
-                          className="flex-1 bg-gray-800 rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              const input = e.target as HTMLInputElement;
-                              if (input.value.trim()) {
-                                sendReply(msg.id, input.value);
-                                input.value = '';
-                              }
-                            }
-                          }}
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          placeholder="Type your reply..."
+                          className="flex-1 bg-gray-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          onKeyPress={(e) => e.key === 'Enter' && sendReply(msg.id)}
+                          autoFocus
                         />
                         <button
+                          onClick={() => sendReply(msg.id)}
+                          className="px-3 py-2 bg-blue-600 rounded-lg text-white text-sm hover:bg-blue-700 transition"
+                        >
+                          Send
+                        </button>
+                        <button
+                          onClick={() => {
+                            setReplyingTo(null);
+                            setReplyText('');
+                          }}
+                          className="px-3 py-2 bg-gray-700 rounded-lg text-white text-sm hover:bg-gray-600 transition"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Admin Action Buttons */}
+                    {isAdmin && msg.status !== 'RESOLVED' && !replyingTo && (
+                      <div className="flex gap-2 mt-2 ml-4">
+                        <button
+                          onClick={() => setReplyingTo(msg.id)}
+                          className="px-3 py-1 bg-blue-500/20 text-blue-500 rounded-lg text-xs hover:bg-blue-500/30 transition flex items-center gap-1"
+                        >
+                          <Reply className="w-3 h-3" />
+                          Reply
+                        </button>
+                        <button
                           onClick={() => resolveMessage(msg.id)}
-                          className="px-2 py-1 bg-green-500/20 text-green-500 rounded-lg text-xs hover:bg-green-500/30 transition"
+                          className="px-3 py-1 bg-green-500/20 text-green-500 rounded-lg text-xs hover:bg-green-500/30 transition"
                         >
                           Resolve
                         </button>
@@ -222,8 +295,33 @@ export default function SupportChat() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
-            {!isAdmin && (
+            {/* Admin Input Area - Can send messages freely */}
+            {isAdmin ? (
+              <div className="p-4 border-t border-gray-800 bg-[#1a1a1a]">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && sendAdminMessage()}
+                    placeholder="Type a message to send to users..."
+                    className="flex-1 bg-black rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    disabled={sending}
+                  />
+                  <button
+                    onClick={sendAdminMessage}
+                    disabled={sending}
+                    className="bg-blue-600 rounded-lg px-4 py-2 text-white hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-gray-600 text-xs mt-2 text-center">
+                  Messages will be sent to all users
+                </p>
+              </div>
+            ) : (
+              /* User Input Area */
               <div className="p-4 border-t border-gray-800">
                 <div className="flex gap-2">
                   <input
