@@ -109,15 +109,13 @@ export default function SupportChat() {
     setNewMessage('');
     
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/support/message`,
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/support/message`,
         { message: messageToSend },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log('Message sent response:', response.data);
       toast.success('Message sent!');
-      await fetchMessages(); // Refresh to get all messages
+      await fetchMessages();
     } catch (error) {
-      console.error('Send message error:', error);
       toast.error('Failed to send message');
       setNewMessage(messageToSend);
     } finally {
@@ -142,18 +140,16 @@ export default function SupportChat() {
     setNewMessage('');
     
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/support/send-to-user`,
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/support/send-to-user`,
         { 
           message: messageToSend,
           userId: selectedUser.id
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log('Support message sent response:', response.data);
-      toast.success(`Message sent to ${selectedUser.name}`);
-      await fetchMessages(); // Refresh to get all messages (including previous ones)
+      toast.success(`Support message sent to ${selectedUser.name}`);
+      await fetchMessages();
     } catch (error) {
-      console.error('Send support message error:', error);
       toast.error('Failed to send message');
       setNewMessage(messageToSend);
     } finally {
@@ -321,7 +317,7 @@ export default function SupportChat() {
                       </div>
                     </div>
 
-                    {/* Messages Area - Show ALL messages */}
+                    {/* Messages Area - Show ALL messages with correct labels */}
                     <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
                       {selectedUserMessages.length === 0 ? (
                         <div className="text-center text-gray-500">
@@ -331,11 +327,13 @@ export default function SupportChat() {
                       ) : (
                         selectedUserMessages.map((msg: SupportMessage) => (
                           <div key={msg.id} className="space-y-2">
-                            {/* User Message */}
+                            {/* User Message - Always shows as the user's name */}
                             <div className="bg-[#1a1a1a] rounded-lg p-3">
                               <div className="flex justify-between items-start mb-2">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-blue-400 text-xs font-semibold">{msg.userName}</span>
+                                  <span className="text-blue-400 text-xs font-semibold">
+                                    {msg.userName}
+                                  </span>
                                   <span className="text-gray-600 text-[10px]">
                                     {new Date(msg.createdAt).toLocaleString()}
                                   </span>
@@ -344,6 +342,19 @@ export default function SupportChat() {
                               </div>
                               <p className="text-white text-sm break-words">{msg.message}</p>
                             </div>
+
+                            {/* Support Reply - Only show if there's a reply from support */}
+                            {msg.reply && (
+                              <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 ml-4">
+                                <div className="flex justify-between items-start mb-2">
+                                  <span className="text-green-400 text-xs font-semibold">Support</span>
+                                  <span className="text-gray-600 text-[10px]">
+                                    {new Date(msg.updatedAt || msg.createdAt).toLocaleString()}
+                                  </span>
+                                </div>
+                                <p className="text-white text-sm break-words">{msg.reply}</p>
+                              </div>
+                            )}
                           </div>
                         ))
                       )}
@@ -362,7 +373,7 @@ export default function SupportChat() {
                               sendSupportMessage();
                             }
                           }}
-                          placeholder={`Message ${selectedUser.name}...`}
+                          placeholder={`Message ${selectedUser.name} as Support...`}
                           className="flex-1 bg-black rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                           disabled={sending}
                           autoFocus
@@ -376,7 +387,7 @@ export default function SupportChat() {
                         </button>
                       </div>
                       <p className="text-gray-600 text-xs mt-2 text-center">
-                        Message will appear as message from you to {selectedUser.name}
+                        Message will appear as "Support" to {selectedUser.name}
                       </p>
                     </div>
                   </>
@@ -405,6 +416,19 @@ export default function SupportChat() {
                           </div>
                           <p className="text-white text-sm break-words">{msg.message}</p>
                         </div>
+
+                        {/* Support Reply */}
+                        {msg.reply && (
+                          <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 ml-4">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-green-400 text-xs font-semibold">Support</span>
+                              <span className="text-gray-600 text-[10px]">
+                                {new Date(msg.updatedAt || msg.createdAt).toLocaleString()}
+                              </span>
+                            </div>
+                            <p className="text-white text-sm break-words">{msg.reply}</p>
+                          </div>
+                        )}
                       </div>
                     ))
                   )}
