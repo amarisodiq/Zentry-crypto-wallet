@@ -131,28 +131,30 @@ export default function SupportChat() {
     }
   };
 
-  const sendAdminMessage = async () => {
+  // Admin sends a message TO a specific user
+  const sendAdminMessageToUser = async () => {
     if (!newMessage.trim()) {
       toast.error('Please enter a message');
       return;
     }
 
     if (!selectedUserId) {
-      toast.error('Please select a user to message');
+      toast.error('Please select a user to send message to');
       return;
     }
 
     setSending(true);
     try {
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/support/send`,
+      const selectedUser = users.find(u => u.id === selectedUserId);
+      
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/support/send-to-user`,
         { 
           message: newMessage,
           userId: selectedUserId
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      const selectedUser = users.find(u => u.id === selectedUserId);
-      toast.success(`Message sent to ${selectedUser?.name || 'user'}!`);
+      toast.success(`Message sent to ${selectedUser?.name}!`);
       setNewMessage('');
       setSelectedUserId('');
       setShowUserSelector(false);
@@ -193,7 +195,7 @@ export default function SupportChat() {
 
   const getSelectedUserName = () => {
     const selectedUser = users.find(u => u.id === selectedUserId);
-    return selectedUser ? selectedUser.name : 'Select a user';
+    return selectedUser ? selectedUser.name : 'Select user to message';
   };
 
   return (
@@ -256,7 +258,7 @@ export default function SupportChat() {
                       <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-blue-400 text-xs font-semibold">
-                            {isAdmin ? msg.userName : 'You'}
+                            {msg.userName}
                           </span>
                           {isAdmin && (
                             <span className="text-gray-500 text-xs break-all">{msg.userEmail}</span>
@@ -270,7 +272,7 @@ export default function SupportChat() {
                       </p>
                     </div>
 
-                    {/* Admin Reply */}
+                    {/* Admin Reply - This is where admin's response goes */}
                     {msg.reply && (
                       <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 ml-2 md:ml-4">
                         <div className="flex justify-between items-start mb-2">
@@ -279,67 +281,16 @@ export default function SupportChat() {
                         <p className="text-white text-sm break-words">{msg.reply}</p>
                       </div>
                     )}
-
-                    {/* Reply Input for Admin */}
-                    {isAdmin && replyingTo === msg.id && (
-                      <div className="flex flex-col sm:flex-row gap-2 mt-2 ml-2 md:ml-4">
-                        <input
-                          type="text"
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          placeholder="Type your reply..."
-                          className="flex-1 bg-gray-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          onKeyPress={(e) => e.key === 'Enter' && sendReply(msg.id)}
-                          autoFocus
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => sendReply(msg.id)}
-                            className="px-3 py-2 bg-blue-600 rounded-lg text-white text-sm hover:bg-blue-700 transition"
-                          >
-                            Send
-                          </button>
-                          <button
-                            onClick={() => {
-                              setReplyingTo(null);
-                              setReplyText('');
-                            }}
-                            className="px-3 py-2 bg-gray-700 rounded-lg text-white text-sm hover:bg-gray-600 transition"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Admin Action Buttons */}
-                    {isAdmin && msg.status !== 'RESOLVED' && !replyingTo && (
-                      <div className="flex gap-2 mt-2 ml-2 md:ml-4">
-                        <button
-                          onClick={() => setReplyingTo(msg.id)}
-                          className="px-2 md:px-3 py-1 bg-blue-500/20 text-blue-500 rounded-lg text-xs hover:bg-blue-500/30 transition flex items-center gap-1"
-                        >
-                          <Reply className="w-3 h-3" />
-                          Reply
-                        </button>
-                        <button
-                          onClick={() => resolveMessage(msg.id)}
-                          className="px-2 md:px-3 py-1 bg-green-500/20 text-green-500 rounded-lg text-xs hover:bg-green-500/30 transition"
-                        >
-                          Resolve
-                        </button>
-                      </div>
-                    )}
                   </div>
                 ))
               )}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Admin Input Area */}
+            {/* Admin Input Area - Send message TO selected user */}
             {isAdmin ? (
               <div className="p-3 md:p-4 border-t border-gray-800 bg-[#1a1a1a]">
-                {/* User Selector */}
+                {/* User Selector - Choose who to send message to */}
                 <div className="mb-3">
                   <button
                     onClick={() => setShowUserSelector(!showUserSelector)}
@@ -380,13 +331,13 @@ export default function SupportChat() {
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && sendAdminMessage()}
-                    placeholder="Type a message..."
+                    onKeyPress={(e) => e.key === 'Enter' && sendAdminMessageToUser()}
+                    placeholder="Type a message to send to this user..."
                     className="flex-1 bg-black rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                     disabled={sending || !selectedUserId}
                   />
                   <button
-                    onClick={sendAdminMessage}
+                    onClick={sendAdminMessageToUser}
                     disabled={sending || !selectedUserId}
                     className="bg-blue-600 rounded-lg px-4 py-2 text-white hover:bg-blue-700 transition disabled:opacity-50"
                   >
@@ -394,7 +345,7 @@ export default function SupportChat() {
                   </button>
                 </div>
                 <p className="text-gray-600 text-xs mt-2 text-center">
-                  Select a user first, then send a message
+                  Select a user, then type your message to send to them
                 </p>
               </div>
             ) : (

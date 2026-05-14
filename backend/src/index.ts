@@ -584,61 +584,42 @@ app.put('/api/admin/support/messages/:id/resolve', authenticate, requireAdmin, a
 });
 
 // Admin sends a message to all users (or specific user)
-app.post('/api/admin/support/send', authenticate, requireAdmin, async (req: any, res) => {
+// Admin sends a message TO a specific user (appears as support reply)
+app.post('/api/admin/support/send-to-user', authenticate, requireAdmin, async (req: any, res) => {
   const { message, userId } = req.body;
   
   if (!message || message.trim() === '') {
     return res.status(400).json({ error: 'Message is required' });
   }
   
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+  
   try {
-    // If userId is 'all' or not specified, send to all users
-    if (userId === 'all' || !userId) {
-      const users = await prisma.user.findMany({
-        where: { role: 'USER' }
-      });
-      
-      const messages = [];
-      for (const user of users) {
-        const supportMessage = await prisma.supportMessage.create({
-          data: {
-            userId: user.id,
-            userEmail: user.email,
-            userName: user.name,
-            message: message,
-            status: 'REPLIED',
-            reply: 'Admin message'
-          }
-        });
-        messages.push(supportMessage);
-      }
-      
-      res.json({ success: true, count: messages.length });
-    } else {
-      // Send to specific user
-      const user = await prisma.user.findUnique({
-        where: { id: userId }
-      });
-      
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      
-      const supportMessage = await prisma.supportMessage.create({
-        data: {
-          userId: user.id,
-          userEmail: user.email,
-          userName: user.name,
-          message: message,
-          status: 'REPLIED',
-          reply: 'Admin message'
-        }
-      });
-      
-      res.json({ success: true, message: supportMessage });
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+    
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found' });
     }
+    
+    // Create a support message with a reply from admin
+    const supportMessage = await prisma.supportMessage.create({
+      data: {
+        userId: targetUser.id,
+        userEmail: targetUser.email,
+        userName: targetUser.name,
+        message: message,
+        status: 'REPLIED',
+        reply: 'Support message' // Admin can customize this
+      }
+    });
+    
+    res.json({ success: true, message: supportMessage });
   } catch (error) {
-    console.error('Error sending admin message:', error);
+    console.error('Error sending message to user:', error);
     res.status(500).json({ error: 'Failed to send message' });
   }
 });
