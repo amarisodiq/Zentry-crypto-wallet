@@ -170,18 +170,8 @@ export default function SupportChat() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'PENDING':
-        return <span className="flex items-center gap-1 text-yellow-500 text-xs"><Clock className="w-3 h-3" /> Pending</span>;
-      case 'REPLIED':
-        return <span className="flex items-center gap-1 text-blue-500 text-xs"><CheckCircle className="w-3 h-3" /> Replied</span>;
-      case 'RESOLVED':
-        return <span className="flex items-center gap-1 text-green-500 text-xs"><CheckCircle className="w-3 h-3" /> Resolved</span>;
-      default:
-        return null;
-    }
-  };
+  // Remove status badge - no longer showing pending
+  // Function removed
 
   const getSelectedUserMessages = () => {
     return messages.filter((m: SupportMessage) => m.userId === selectedUser?.id);
@@ -327,7 +317,6 @@ export default function SupportChat() {
                       ) : (
                         selectedUserMessages.map((msg: SupportMessage) => (
                           <div key={msg.id}>
-                            {/* Check if this is a support message (has reply and message is empty) */}
                             {msg.reply && msg.message === '' ? (
                               <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 mb-2">
                                 <div className="flex justify-between items-start mb-2">
@@ -347,7 +336,6 @@ export default function SupportChat() {
                                       {new Date(msg.createdAt).toLocaleString()}
                                     </span>
                                   </div>
-                                  {getStatusBadge(msg.status)}
                                 </div>
                                 <p className="text-white text-sm break-words">{msg.message}</p>
                                 {msg.reply && (
@@ -396,7 +384,7 @@ export default function SupportChat() {
                 )}
               </>
             ) : (
-              /* USER VIEW - This is what the regular user sees */
+              /* USER VIEW */
               <>
                 <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
                   {messages.length === 0 ? (
@@ -407,9 +395,7 @@ export default function SupportChat() {
                   ) : (
                     messages.map((msg: SupportMessage) => (
                       <div key={msg.id}>
-                        {/* Check if this is a support message (has reply and message is empty) */}
                         {msg.reply && msg.message === '' ? (
-                          /* Support Message - shows as Support, not as You */
                           <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 mb-2">
                             <div className="flex justify-between items-start mb-2">
                               <span className="text-green-400 text-xs font-semibold">Support</span>
@@ -420,11 +406,9 @@ export default function SupportChat() {
                             <p className="text-white text-sm break-words">{msg.reply}</p>
                           </div>
                         ) : (
-                          /* User Message - shows as You */
                           <div className="bg-[#1a1a1a] rounded-lg p-3 mb-2">
                             <div className="flex justify-between items-start mb-2">
                               <span className="text-blue-400 text-xs font-semibold">You</span>
-                              {getStatusBadge(msg.status)}
                               <span className="text-gray-600 text-[10px]">
                                 {new Date(msg.createdAt).toLocaleString()}
                               </span>
