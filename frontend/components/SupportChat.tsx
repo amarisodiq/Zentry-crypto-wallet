@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useStore } from '@/store/useStore';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,6 +43,41 @@ export default function SupportChat() {
   const { user, token } = useStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isAdmin = user?.role === 'ADMIN';
+  const pollingInterval = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchMessages = useCallback(async () => {
+    if (!isOpen) return;
+    
+    try {
+      const url = isAdmin 
+        ? `${process.env.NEXT_PUBLIC_API_URL}/admin/support/messages`
+        : `${process.env.NEXT_PUBLIC_API_URL}/support/my-messages`;
+      
+      const { data } = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const sortedMessages = [...data].sort((a: SupportMessage, b: SupportMessage) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      setMessages(sortedMessages);
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
+    }
+  }, [isOpen, isAdmin, token]);
+
+  const fetchUsers = useCallback(async () => {
+    if (!isOpen || !isAdmin) return;
+    
+    try {
+      const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const filteredUsers = data.filter((u: User) => u.role !== 'ADMIN');
+      setUsers(filteredUsers);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    }
+  }, [isOpen, isAdmin, token]);
 
   useEffect(() => {
     if (isOpen && user) {
@@ -50,8 +85,22 @@ export default function SupportChat() {
       if (isAdmin) {
         fetchUsers();
       }
+      
+      pollingInterval.current = setInterval(() => {
+        fetchMessages();
+        if (isAdmin) {
+          fetchUsers();
+        }
+      }, 2000);
     }
-  }, [isOpen, user, isAdmin]);
+    
+    return () => {
+      if (pollingInterval.current) {
+        clearInterval(pollingInterval.current);
+        pollingInterval.current = null;
+      }
+    };
+  }, [isOpen, user, isAdmin, fetchMessages, fetchUsers]);
 
   useEffect(() => {
     scrollToBottom();
@@ -63,41 +112,6 @@ export default function SupportChat() {
     }, 100);
   };
 
-  const fetchUsers = async () => {
-    try {
-      const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/users`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const filteredUsers = data.filter((u: User) => u.role !== 'ADMIN');
-      setUsers(filteredUsers);
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
-    }
-  };
-
-  const fetchMessages = async () => {
-    setLoading(true);
-    try {
-      const url = isAdmin 
-        ? `${process.env.NEXT_PUBLIC_API_URL}/admin/support/messages`
-        : `${process.env.NEXT_PUBLIC_API_URL}/support/my-messages`;
-      
-      const { data } = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      // Sort messages by createdAt (oldest first)
-      const sortedMessages = [...data].sort((a: SupportMessage, b: SupportMessage) => 
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
-      setMessages(sortedMessages);
-    } catch (error) {
-      console.error('Failed to fetch messages:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // User sends a message
   const sendMessage = async () => {
     if (!newMessage.trim()) {
       toast.error('Please enter a message');
@@ -123,7 +137,6 @@ export default function SupportChat() {
     }
   };
 
-  // Admin sends a support message to selected user
   const sendSupportMessage = async () => {
     if (!newMessage.trim()) {
       toast.error('Please enter a message');
@@ -140,16 +153,22 @@ export default function SupportChat() {
     setNewMessage('');
     
     try {
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/support/send-to-user`,
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/support/send-to-user`,
         { 
           message: messageToSend,
           userId: selectedUser.id
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Support message sent to ${selectedUser.name}`);
+      
+      console.log('Message sent successfully:', response.data);
+      toast.success(`Message sent to ${selectedUser.name}`);
+      
+      // Fetch fresh messages
       await fetchMessages();
+      
     } catch (error) {
+      console.error('Send error:', error);
       toast.error('Failed to send message');
       setNewMessage(messageToSend);
     } finally {
@@ -170,12 +189,10 @@ export default function SupportChat() {
     }
   };
 
-  // Get messages for selected user (admin view)
   const getSelectedUserMessages = () => {
     return messages.filter((m: SupportMessage) => m.userId === selectedUser?.id);
   };
 
-  // Get all unique users with messages (for admin list)
   const getUsersWithMessages = (): UserWithMessage[] => {
     const userMap = new Map<string, UserWithMessage>();
     messages.forEach((msg: SupportMessage) => {
@@ -198,7 +215,6 @@ export default function SupportChat() {
 
   return (
     <>
-      {/* Chat Button */}
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-20 right-4 z-50 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full p-3 md:p-4 shadow-lg hover:scale-105 transition active:scale-95"
@@ -206,7 +222,6 @@ export default function SupportChat() {
         <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
       </button>
 
-      {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -217,7 +232,6 @@ export default function SupportChat() {
                        w-[calc(100%-16px)] md:w-[550px] h-[85vh] md:h-[650px] 
                        bg-black border border-gray-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
-            {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 md:p-4 flex justify-between items-center">
               <div>
                 <h3 className="text-white font-semibold text-sm md:text-base">Support</h3>
@@ -234,7 +248,6 @@ export default function SupportChat() {
               </button>
             </div>
 
-            {/* Welcome Message */}
             <div className="bg-[#1a1a1a] p-3 md:p-4 border-b border-gray-800">
               <p className="text-gray-300 text-xs md:text-sm">
                 Welcome to our store! 😊 Whether you have a specific question or need assistance, 
@@ -242,11 +255,9 @@ export default function SupportChat() {
               </p>
             </div>
 
-            {/* Admin View - User List or Conversation */}
             {isAdmin ? (
               <>
                 {!selectedUser ? (
-                  /* User List */
                   <div className="flex-1 overflow-y-auto">
                     {usersWithMessages.length === 0 && users.length === 0 ? (
                       <div className="text-center text-gray-500 p-8">
@@ -254,7 +265,6 @@ export default function SupportChat() {
                       </div>
                     ) : (
                       <>
-                        {/* Users with existing messages */}
                         {usersWithMessages.map((u: UserWithMessage) => (
                           <button
                             key={u.id}
@@ -282,7 +292,6 @@ export default function SupportChat() {
                           </button>
                         ))}
                         
-                        {/* Users with no messages yet */}
                         {users.filter((u: User) => !usersWithMessages.some((w: UserWithMessage) => w.id === u.id)).map((u: User) => (
                           <button
                             key={u.id}
@@ -301,9 +310,7 @@ export default function SupportChat() {
                     )}
                   </div>
                 ) : (
-                  /* Conversation View with Selected User */
                   <>
-                    {/* Conversation Header with Back Button */}
                     <div className="bg-[#1a1a1a] p-3 border-b border-gray-800 flex items-center gap-3">
                       <button
                         onClick={() => setSelectedUser(null)}
@@ -317,7 +324,6 @@ export default function SupportChat() {
                       </div>
                     </div>
 
-                    {/* Messages Area - Show ALL messages with correct labels */}
                     <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
                       {selectedUserMessages.length === 0 ? (
                         <div className="text-center text-gray-500">
@@ -327,13 +333,10 @@ export default function SupportChat() {
                       ) : (
                         selectedUserMessages.map((msg: SupportMessage) => (
                           <div key={msg.id} className="space-y-2">
-                            {/* User Message - Always shows as the user's name */}
                             <div className="bg-[#1a1a1a] rounded-lg p-3">
                               <div className="flex justify-between items-start mb-2">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-blue-400 text-xs font-semibold">
-                                    {msg.userName}
-                                  </span>
+                                  <span className="text-blue-400 text-xs font-semibold">{msg.userName}</span>
                                   <span className="text-gray-600 text-[10px]">
                                     {new Date(msg.createdAt).toLocaleString()}
                                   </span>
@@ -342,26 +345,12 @@ export default function SupportChat() {
                               </div>
                               <p className="text-white text-sm break-words">{msg.message}</p>
                             </div>
-
-                            {/* Support Reply - Only show if there's a reply from support */}
-                            {msg.reply && (
-                              <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 ml-4">
-                                <div className="flex justify-between items-start mb-2">
-                                  <span className="text-green-400 text-xs font-semibold">Support</span>
-                                  <span className="text-gray-600 text-[10px]">
-                                    {new Date(msg.updatedAt || msg.createdAt).toLocaleString()}
-                                  </span>
-                                </div>
-                                <p className="text-white text-sm break-words">{msg.reply}</p>
-                              </div>
-                            )}
                           </div>
                         ))
                       )}
                       <div ref={messagesEndRef} />
                     </div>
 
-                    {/* Input Area for Selected User */}
                     <div className="p-3 md:p-4 border-t border-gray-800 bg-[#1a1a1a]">
                       <div className="flex gap-2">
                         <input
@@ -387,14 +376,13 @@ export default function SupportChat() {
                         </button>
                       </div>
                       <p className="text-gray-600 text-xs mt-2 text-center">
-                        Message will appear as "Support" to {selectedUser.name}
+                        Message will appear as a new message from Support
                       </p>
                     </div>
                   </>
                 )}
               </>
             ) : (
-              /* User View - Regular user sees only their own conversation */
               <>
                 <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
                   {messages.length === 0 ? (
@@ -405,7 +393,6 @@ export default function SupportChat() {
                   ) : (
                     messages.map((msg: SupportMessage) => (
                       <div key={msg.id} className="space-y-2">
-                        {/* User Message */}
                         <div className="bg-[#1a1a1a] rounded-lg p-3">
                           <div className="flex justify-between items-start mb-2">
                             <span className="text-blue-400 text-xs font-semibold">You</span>
@@ -416,26 +403,12 @@ export default function SupportChat() {
                           </div>
                           <p className="text-white text-sm break-words">{msg.message}</p>
                         </div>
-
-                        {/* Support Reply */}
-                        {msg.reply && (
-                          <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 ml-4">
-                            <div className="flex justify-between items-start mb-2">
-                              <span className="text-green-400 text-xs font-semibold">Support</span>
-                              <span className="text-gray-600 text-[10px]">
-                                {new Date(msg.updatedAt || msg.createdAt).toLocaleString()}
-                              </span>
-                            </div>
-                            <p className="text-white text-sm break-words">{msg.reply}</p>
-                          </div>
-                        )}
                       </div>
                     ))
                   )}
                   <div ref={messagesEndRef} />
                 </div>
 
-                {/* User Input */}
                 <div className="p-3 md:p-4 border-t border-gray-800">
                   <div className="flex gap-2">
                     <input
@@ -466,7 +439,6 @@ export default function SupportChat() {
               </>
             )}
 
-            {/* Stats */}
             {isAdmin && (
               <div className="p-2 md:p-3 border-t border-gray-800 bg-[#1a1a1a]">
                 <div className="flex justify-between text-xs">
