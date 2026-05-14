@@ -584,6 +584,7 @@ app.put('/api/admin/support/messages/:id/resolve', authenticate, requireAdmin, a
 });
 
 // Admin sends a new support message to a user (creates NEW message every time)
+// Admin sends a support message to a user (appears as SUPPORT, not as the user)
 app.post('/api/admin/support/send-to-user', authenticate, requireAdmin, async (req: any, res) => {
   const { message, userId } = req.body;
   
@@ -604,19 +605,40 @@ app.post('/api/admin/support/send-to-user', authenticate, requireAdmin, async (r
       return res.status(404).json({ error: 'User not found' });
     }
     
-    // ALWAYS CREATE A NEW MESSAGE - DO NOT UPDATE EXISTING
-    const supportMessage = await prisma.supportMessage.create({
-      data: {
-        userId: targetUser.id,
-        userEmail: targetUser.email,
-        userName: targetUser.name,
-        message: message,
-        status: 'PENDING'
-      }
+    // Find the most recent message from this user to reply to
+    const existingMessage = await prisma.supportMessage.findFirst({
+      where: { userId: targetUser.id },
+      orderBy: { createdAt: 'desc' }
     });
     
-    console.log(`✅ New support message created for ${targetUser.email}: ${message.substring(0, 50)}`);
-    res.json({ success: true, message: supportMessage });
+    if (existingMessage) {
+      // Update the existing message with a support reply
+      const updated = await prisma.supportMessage.update({
+        where: { id: existingMessage.id },
+        data: {
+          reply: message,
+          status: 'REPLIED',
+          updatedAt: new Date()
+        }
+      });
+      console.log(`✅ Support reply sent to ${targetUser.email}: ${message.substring(0, 50)}`);
+      res.json({ success: true, message: updated });
+    } else {
+      // Create a new message from the user, then add support reply
+      const newMessage = await prisma.supportMessage.create({
+        data: {
+          userId: targetUser.id,
+          userEmail: targetUser.email,
+          userName: targetUser.name,
+          message: "Support message",
+          status: 'REPLIED',
+          reply: message,
+          updatedAt: new Date()
+        }
+      });
+      console.log(`✅ New support message created for ${targetUser.email}: ${message.substring(0, 50)}`);
+      res.json({ success: true, message: newMessage });
+    }
   } catch (error) {
     console.error('Error sending support message:', error);
     res.status(500).json({ error: 'Failed to send message' });
