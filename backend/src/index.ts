@@ -19,7 +19,6 @@ async function ensureDatabaseHasUsers() {
     if (userCount === 0) {
       console.log('📦 No users found. Seeding database...');
       
-      // Create admin user
       const adminPassword = await bcrypt.hash('admin123', 10);
       await prisma.user.create({
         data: {
@@ -34,7 +33,6 @@ async function ensureDatabaseHasUsers() {
       });
       console.log('✅ Admin user created');
       
-      // Create test user 1
       const user1Password = await bcrypt.hash('user123', 10);
       await prisma.user.create({
         data: {
@@ -48,7 +46,6 @@ async function ensureDatabaseHasUsers() {
       });
       console.log('✅ Test user 1 created');
       
-      // Create test user 2
       const user2Password = await bcrypt.hash('user123', 10);
       await prisma.user.create({
         data: {
@@ -79,7 +76,6 @@ async function ensureDatabaseHasUsers() {
 // Middleware
 app.use(helmet());
 
-// CORS configuration
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5000',
@@ -105,7 +101,6 @@ app.use(cors({
 
 app.use(express.json());
 
-// Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100
@@ -583,9 +578,7 @@ app.put('/api/admin/support/messages/:id/resolve', authenticate, requireAdmin, a
   res.json({ success: true, message: updated });
 });
 
-// Admin sends a new support message to a user (creates NEW message every time)
-// Admin sends a support message to a user (appears as SUPPORT, not as the user)
-// Admin sends a support message to a user (CREATES NEW MESSAGE every time)
+// Admin sends a support message to a user (appears as SUPPORT)
 app.post('/api/admin/support/send-to-user', authenticate, requireAdmin, async (req: any, res) => {
   const { message, userId } = req.body;
   
@@ -606,18 +599,20 @@ app.post('/api/admin/support/send-to-user', authenticate, requireAdmin, async (r
       return res.status(404).json({ error: 'User not found' });
     }
     
-    // ALWAYS CREATE A NEW MESSAGE - NEVER UPDATE EXISTING
+    // Create a support message (appears as Support to user)
     const supportMessage = await prisma.supportMessage.create({
       data: {
         userId: targetUser.id,
         userEmail: targetUser.email,
         userName: targetUser.name,
-        message: message,
-        status: 'PENDING'
+        message: '', // Empty message, will use reply
+        status: 'REPLIED',
+        reply: message, // Store the support message in reply field
+        updatedAt: new Date()
       }
     });
     
-    console.log(`✅ New support message created for ${targetUser.email}: ${message.substring(0, 50)}`);
+    console.log(`✅ Support message sent to ${targetUser.email}: ${message.substring(0, 50)}`);
     res.json({ success: true, message: supportMessage });
   } catch (error) {
     console.error('Error sending support message:', error);

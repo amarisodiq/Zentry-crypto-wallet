@@ -91,7 +91,7 @@ export default function SupportChat() {
         if (isAdmin) {
           fetchUsers();
         }
-      }, 2000);
+      }, 3000);
     }
     
     return () => {
@@ -153,22 +153,16 @@ export default function SupportChat() {
     setNewMessage('');
     
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/support/send-to-user`,
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/support/send-to-user`,
         { 
           message: messageToSend,
           userId: selectedUser.id
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      console.log('Message sent successfully:', response.data);
-      toast.success(`Message sent to ${selectedUser.name}`);
-      
-      // Fetch fresh messages
+      toast.success(`Support message sent to ${selectedUser.name}`);
       await fetchMessages();
-      
     } catch (error) {
-      console.error('Send error:', error);
       toast.error('Failed to send message');
       setNewMessage(messageToSend);
     } finally {
@@ -332,19 +326,31 @@ export default function SupportChat() {
                         </div>
                       ) : (
                         selectedUserMessages.map((msg: SupportMessage) => (
-                          <div key={msg.id} className="space-y-2">
-                            <div className="bg-[#1a1a1a] rounded-lg p-3">
-                              <div className="flex justify-between items-start mb-2">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-blue-400 text-xs font-semibold">{msg.userName}</span>
+                          <div key={msg.id}>
+                            {msg.reply ? (
+                              <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 mb-2">
+                                <div className="flex justify-between items-start mb-2">
+                                  <span className="text-green-400 text-xs font-semibold">Support</span>
                                   <span className="text-gray-600 text-[10px]">
-                                    {new Date(msg.createdAt).toLocaleString()}
+                                    {new Date(msg.updatedAt || msg.createdAt).toLocaleString()}
                                   </span>
                                 </div>
-                                {getStatusBadge(msg.status)}
+                                <p className="text-white text-sm break-words">{msg.reply}</p>
                               </div>
-                              <p className="text-white text-sm break-words">{msg.message}</p>
-                            </div>
+                            ) : (
+                              <div className="bg-[#1a1a1a] rounded-lg p-3 mb-2">
+                                <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-blue-400 text-xs font-semibold">{msg.userName}</span>
+                                    <span className="text-gray-600 text-[10px]">
+                                      {new Date(msg.createdAt).toLocaleString()}
+                                    </span>
+                                  </div>
+                                  {getStatusBadge(msg.status)}
+                                </div>
+                                <p className="text-white text-sm break-words">{msg.message}</p>
+                              </div>
+                            )}
                           </div>
                         ))
                       )}
@@ -376,7 +382,7 @@ export default function SupportChat() {
                         </button>
                       </div>
                       <p className="text-gray-600 text-xs mt-2 text-center">
-                        Message will appear as a new message from Support
+                        Message will appear as "Support" to {selectedUser.name}
                       </p>
                     </div>
                   </>
@@ -392,8 +398,8 @@ export default function SupportChat() {
                     </div>
                   ) : (
                     messages.map((msg: SupportMessage) => (
-                      <div key={msg.id} className="space-y-2">
-                        <div className="bg-[#1a1a1a] rounded-lg p-3">
+                      <div key={msg.id}>
+                        <div className="bg-[#1a1a1a] rounded-lg p-3 mb-2">
                           <div className="flex justify-between items-start mb-2">
                             <span className="text-blue-400 text-xs font-semibold">You</span>
                             {getStatusBadge(msg.status)}
@@ -403,6 +409,17 @@ export default function SupportChat() {
                           </div>
                           <p className="text-white text-sm break-words">{msg.message}</p>
                         </div>
+                        {msg.reply && (
+                          <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 ml-4 mb-2">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-green-400 text-xs font-semibold">Support</span>
+                              <span className="text-gray-600 text-[10px]">
+                                {new Date(msg.updatedAt || msg.createdAt).toLocaleString()}
+                              </span>
+                            </div>
+                            <p className="text-white text-sm break-words">{msg.reply}</p>
+                          </div>
+                        )}
                       </div>
                     ))
                   )}
