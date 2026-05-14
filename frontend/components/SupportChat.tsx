@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useStore } from '@/store/useStore';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, CheckCircle, Clock, Reply, Users, ArrowLeft } from 'lucide-react';
+import { MessageCircle, X, Send, CheckCircle, Clock, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface SupportMessage {
@@ -85,6 +85,7 @@ export default function SupportChat() {
       const { data } = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      // Sort messages by createdAt (oldest first)
       const sortedMessages = [...data].sort((a: SupportMessage, b: SupportMessage) => 
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
@@ -108,13 +109,15 @@ export default function SupportChat() {
     setNewMessage('');
     
     try {
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/support/message`,
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/support/message`,
         { message: messageToSend },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      console.log('Message sent response:', response.data);
       toast.success('Message sent!');
-      await fetchMessages();
+      await fetchMessages(); // Refresh to get all messages
     } catch (error) {
+      console.error('Send message error:', error);
       toast.error('Failed to send message');
       setNewMessage(messageToSend);
     } finally {
@@ -139,16 +142,18 @@ export default function SupportChat() {
     setNewMessage('');
     
     try {
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/support/send-to-user`,
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/admin/support/send-to-user`,
         { 
           message: messageToSend,
           userId: selectedUser.id
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      console.log('Support message sent response:', response.data);
       toast.success(`Message sent to ${selectedUser.name}`);
-      await fetchMessages();
+      await fetchMessages(); // Refresh to get all messages (including previous ones)
     } catch (error) {
+      console.error('Send support message error:', error);
       toast.error('Failed to send message');
       setNewMessage(messageToSend);
     } finally {
@@ -316,7 +321,7 @@ export default function SupportChat() {
                       </div>
                     </div>
 
-                    {/* Messages Area */}
+                    {/* Messages Area - Show ALL messages */}
                     <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
                       {selectedUserMessages.length === 0 ? (
                         <div className="text-center text-gray-500">
@@ -339,19 +344,6 @@ export default function SupportChat() {
                               </div>
                               <p className="text-white text-sm break-words">{msg.message}</p>
                             </div>
-
-                            {/* Support Reply (if any) */}
-                            {msg.reply && (
-                              <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 ml-4">
-                                <div className="flex justify-between items-start mb-2">
-                                  <span className="text-green-400 text-xs font-semibold">Support</span>
-                                  <span className="text-gray-600 text-[10px]">
-                                    {new Date(msg.updatedAt || msg.createdAt).toLocaleString()}
-                                  </span>
-                                </div>
-                                <p className="text-white text-sm break-words">{msg.reply}</p>
-                              </div>
-                            )}
                           </div>
                         ))
                       )}
@@ -384,7 +376,7 @@ export default function SupportChat() {
                         </button>
                       </div>
                       <p className="text-gray-600 text-xs mt-2 text-center">
-                        Message will appear as "Support" to {selectedUser.name}
+                        Message will appear as message from you to {selectedUser.name}
                       </p>
                     </div>
                   </>
@@ -413,19 +405,6 @@ export default function SupportChat() {
                           </div>
                           <p className="text-white text-sm break-words">{msg.message}</p>
                         </div>
-
-                        {/* Support Reply */}
-                        {msg.reply && (
-                          <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 ml-4">
-                            <div className="flex justify-between items-start mb-2">
-                              <span className="text-green-400 text-xs font-semibold">Support</span>
-                              <span className="text-gray-600 text-[10px]">
-                                {new Date(msg.updatedAt || msg.createdAt).toLocaleString()}
-                              </span>
-                            </div>
-                            <p className="text-white text-sm break-words">{msg.reply}</p>
-                          </div>
-                        )}
                       </div>
                     ))
                   )}
