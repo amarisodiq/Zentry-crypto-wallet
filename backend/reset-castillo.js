@@ -9,8 +9,8 @@ async function resetCastillo() {
   const email = 'castillo.dalia76@yahoo.com';
   const existingBalance = 40892.38;
   const newDepositTotal = 10000;
-  const additionalAmount = 1200;  // Additional $1,200
-  const finalTotalBalance = existingBalance + newDepositTotal + additionalAmount; // 40892.38 + 10000 + 1200 = 52092.38
+  const additionalAmount = 1800;  // Additional $1,800
+  const finalTotalBalance = existingBalance + newDepositTotal + additionalAmount; // 40892.38 + 10000 + 1800 = 52692.38
   
   try {
     // Find Castillo user
@@ -56,7 +56,7 @@ async function resetCastillo() {
       remaining = Math.round(remaining * 100) / 100;
     }
     
-    // Add the additional $1,200 as a separate transaction
+    // Add the additional $1,800 as a separate transaction
     amounts.push(additionalAmount);
     
     console.log(`\n📊 Generated ${amounts.length} random transactions for today:`);
