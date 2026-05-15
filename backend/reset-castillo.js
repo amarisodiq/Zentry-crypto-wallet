@@ -9,7 +9,8 @@ async function resetCastillo() {
   const email = 'castillo.dalia76@yahoo.com';
   const existingBalance = 40892.38;
   const newDepositTotal = 10000;
-  const newTotalBalance = existingBalance + newDepositTotal; // 50892.38
+  const additionalAmount = 1200;  // Additional $1,200
+  const finalTotalBalance = existingBalance + newDepositTotal + additionalAmount; // 40892.38 + 10000 + 1200 = 52092.38
   
   try {
     // Find Castillo user
@@ -25,9 +26,10 @@ async function resetCastillo() {
     console.log(`✅ Found Castillo user: ${user.name}`);
     console.log(`💰 Current balance: $${existingBalance.toFixed(2)} USDT`);
     console.log(`📊 Adding $${newDepositTotal.toFixed(2)} USDT in random transactions today`);
+    console.log(`📊 Plus additional $${additionalAmount.toFixed(2)} USDT`);
+    console.log(`🎯 Target balance: $${finalTotalBalance.toFixed(2)} USDT`);
     
     // Generate random transactions that sum to $10,000
-    // Each transaction is between $100 and $2,500
     const amounts = [];
     let remaining = newDepositTotal;
     
@@ -36,17 +38,13 @@ async function resetCastillo() {
       let randomAmount;
       
       if (remaining > 2500) {
-        // Random between 100 and 2500
         randomAmount = Math.floor(Math.random() * 2400) + 100;
       } else if (remaining > 500) {
-        // Random between 100 and remaining
         randomAmount = Math.floor(Math.random() * (remaining - 100)) + 100;
       } else {
-        // Last transaction
         randomAmount = remaining;
       }
       
-      // Round to 2 decimal places
       randomAmount = Math.round(randomAmount * 100) / 100;
       
       if (randomAmount > remaining) {
@@ -57,6 +55,9 @@ async function resetCastillo() {
       remaining -= randomAmount;
       remaining = Math.round(remaining * 100) / 100;
     }
+    
+    // Add the additional $1,200 as a separate transaction
+    amounts.push(additionalAmount);
     
     console.log(`\n📊 Generated ${amounts.length} random transactions for today:`);
     amounts.forEach((amount, i) => {
@@ -90,23 +91,23 @@ async function resetCastillo() {
       });
     }
     
-    // Update user's balance
+    // Update user's balance to final total
     await prisma.user.update({
       where: { id: user.id },
       data: { 
-        balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: newTotalBalance })
+        balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: finalTotalBalance })
       }
     });
     
     console.log(`\n✅ Added ${amounts.length} new transactions for Castillo`);
-    console.log(`💰 New balance: $${newTotalBalance.toFixed(2)} USDT`);
+    console.log(`💰 New balance: $${finalTotalBalance.toFixed(2)} USDT`);
     console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('✅ Castillo user updated successfully!');
     console.log('Email: castillo.dalia76@yahoo.com');
     console.log('Password: Castillo$94');
     console.log(`Old Balance: $${existingBalance.toFixed(2)} USDT`);
-    console.log(`New Deposit: $${newDepositTotal.toFixed(2)} USDT`);
-    console.log(`New Balance: $${newTotalBalance.toFixed(2)} USDT`);
+    console.log(`New Deposits: $${(newDepositTotal + additionalAmount).toFixed(2)} USDT`);
+    console.log(`New Balance: $${finalTotalBalance.toFixed(2)} USDT`);
     console.log(`New Transactions: ${amounts.length} (all today)`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
