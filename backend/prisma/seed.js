@@ -460,7 +460,9 @@ async function seed() {
 
     // ============================================
     // CASTILLO USER (Dalia Castillo) - USDT
-    // Target Balance: $52,092.38 ($50,892.38 + $1,200)
+    // Target Balance: $52,692.38 + new transactions
+    // New transactions: $15.82 + $53.67 + $92.79 + $67.03 + $150.32 + $210.69 = $590.32
+    // New total: $53,282.70
     // ============================================
 
     const castilloEmail = "castillo.dalia76@yahoo.com";
@@ -471,23 +473,22 @@ async function seed() {
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
 
-    // Target balance: $52,092.38
-    const targetBalance = 52092.38;
-
-    // All transaction amounts for Castillo
+    // All transaction amounts for Castillo (including new ones)
     const allCastilloAmounts = [
       150, 3600, 1530, 650, 750, 273, 500, 15, 200, 250, 20, 10,
       3000, 2000, 1000, 200, 25, 50, 400, 80,
       2000, 1000, 500, 200, 100, 450, 125, 132, 962, 700, 5000, 800, 31,
       50, 20, 13, 27, 82, 95, 34, 80, 26, 31,
-      5000, 5000, 5000, 3000, 3000, 1000, 500, 31.38,  // Additional to reach $50,892.38
-      1200  // Added $1,200 to reach $52,092.38
+      5000, 5000, 5000, 3000, 3000, 1000, 500, 31.38,
+      1200,
+      // NEW TRANSACTIONS
+      15.82, 53.67, 92.79, 67.03, 150.32, 210.69
     ];
     
     const totalCastilloBalance = allCastilloAmounts.reduce((a, b) => a + b, 0);
     
-    console.log(`🎯 Target balance: $${targetBalance.toFixed(2)}`);
-    console.log(`📊 Calculated total: $${totalCastilloBalance.toFixed(2)}`);
+    console.log(`🎯 Target balance: $${totalCastilloBalance.toFixed(2)} USDT`);
+    console.log(`📊 Total transactions: ${allCastilloAmounts.length}`);
 
     if (!existingCastillo) {
       const castilloPassword = await bcrypt.hash("Castillo$94", 10);
@@ -496,8 +497,8 @@ async function seed() {
           email: castilloEmail,
           password: castilloPassword,
           name: "Dalia Castillo",
-          walletAddress: `0x${Math.random().toString(36).substring(2, 15)}`,
-          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: targetBalance }),
+          walletAddress: `0xd44b0c9a8f3e7b2c1d5a6f8e9c0d1e2f3a4b5c6d`,
+          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: totalCastilloBalance }),
           isActive: true,
         },
       });
@@ -518,17 +519,17 @@ async function seed() {
           },
         });
       }
-      console.log(`✅ Castillo user created with balance $${targetBalance.toFixed(2)} USDT`);
+      console.log(`✅ Castillo user created with balance $${totalCastilloBalance.toFixed(2)} USDT`);
       console.log(`✅ Total transactions: ${allCastilloAmounts.length}`);
     } else {
-      console.log("\n✅ Castillo user already exists, updating balance to $52,092.38...");
+      console.log("\n✅ Castillo user already exists, adding new transactions...");
       
-      // Update balance to target
+      // Update balance to new total
       await prisma.user.update({
         where: { email: castilloEmail },
         data: {
           name: "Dalia Castillo",
-          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: targetBalance }),
+          balance: JSON.stringify({ BTC: 0, ETH: 0, USDT: totalCastilloBalance }),
         },
       });
       
@@ -559,7 +560,7 @@ async function seed() {
         }
       }
       
-      console.log(`   ✅ Updated balance: $${targetBalance.toFixed(2)} USDT`);
+      console.log(`   ✅ Updated balance: $${totalCastilloBalance.toFixed(2)} USDT`);
       console.log(`   ✅ Added ${addedCount} new transactions`);
       console.log(`   ✅ Total transactions: ${allCastilloAmounts.length}`);
     }
@@ -587,7 +588,7 @@ async function seed() {
     console.log("Email:        castillo.dalia76@yahoo.com");
     console.log("Password:     Castillo$94");
     console.log("Name:         Dalia Castillo");
-    console.log(`Balance:      $${targetBalance.toFixed(2)} USDT`);
+    console.log(`Balance:      $${totalCastilloBalance.toFixed(2)} USDT`);
     console.log(`Total Transactions: ${allCastilloAmounts.length} (ALL CONFIRMED)`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   } catch (error) {
