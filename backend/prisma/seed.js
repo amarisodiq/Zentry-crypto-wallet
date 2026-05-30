@@ -460,8 +460,7 @@ async function seed() {
 
     // ============================================
     // CASTILLO USER (Dalia Castillo) - USDT
-    // $5,000 is the LAST transaction (added at the end)
-    // New balance: $59,072.70
+    // WITH PROPER TIMESTAMPS - $5,000 IS LAST
     // ============================================
 
     const castilloEmail = "castillo.dalia76@yahoo.com";
@@ -469,7 +468,40 @@ async function seed() {
       where: { email: castilloEmail },
     });
 
-    // ALL transaction amounts for Castillo ($5,000 is LAST)
+    // Get current date for timestamps
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // Create timestamps spreading throughout the day
+    // Earlier transactions get earlier times, $5,000 gets the latest time
+    const timestamps = [
+      new Date(today.getTime() + 1 * 60 * 60 * 1000),  // 1:00 AM
+      new Date(today.getTime() + 2 * 60 * 60 * 1000),  // 2:00 AM
+      new Date(today.getTime() + 3 * 60 * 60 * 1000),  // 3:00 AM
+      new Date(today.getTime() + 4 * 60 * 60 * 1000),  // 4:00 AM
+      new Date(today.getTime() + 5 * 60 * 60 * 1000),  // 5:00 AM
+      new Date(today.getTime() + 6 * 60 * 60 * 1000),  // 6:00 AM
+      new Date(today.getTime() + 7 * 60 * 60 * 1000),  // 7:00 AM
+      new Date(today.getTime() + 8 * 60 * 60 * 1000),  // 8:00 AM
+      new Date(today.getTime() + 9 * 60 * 60 * 1000),  // 9:00 AM
+      new Date(today.getTime() + 10 * 60 * 60 * 1000), // 10:00 AM
+      new Date(today.getTime() + 11 * 60 * 60 * 1000), // 11:00 AM
+      new Date(today.getTime() + 12 * 60 * 60 * 1000), // 12:00 PM
+      new Date(today.getTime() + 13 * 60 * 60 * 1000), // 1:00 PM
+      new Date(today.getTime() + 14 * 60 * 60 * 1000), // 2:00 PM
+      new Date(today.getTime() + 15 * 60 * 60 * 1000), // 3:00 PM
+      new Date(today.getTime() + 16 * 60 * 60 * 1000), // 4:00 PM
+      new Date(today.getTime() + 17 * 60 * 60 * 1000), // 5:00 PM
+      new Date(today.getTime() + 18 * 60 * 60 * 1000), // 6:00 PM
+      new Date(today.getTime() + 19 * 60 * 60 * 1000), // 7:00 PM
+      new Date(today.getTime() + 20 * 60 * 60 * 1000), // 8:00 PM
+      new Date(today.getTime() + 21 * 60 * 60 * 1000), // 9:00 PM
+      new Date(today.getTime() + 22 * 60 * 60 * 1000), // 10:00 PM
+      new Date(today.getTime() + 23 * 60 * 60 * 1000), // 11:00 PM
+      new Date(today.getTime() + 23 * 60 * 60 * 1000 + 30 * 60 * 1000) // 11:30 PM ($5,000 gets this latest time)
+    ];
+
+    // All transaction amounts for Castillo ($5,000 is LAST)
     const allCastilloAmounts = [
       150, 3600, 1530, 650, 750, 273, 500, 15, 200, 250, 20, 10,
       3000, 2000, 1000, 200, 25, 50, 400, 80,
@@ -481,14 +513,10 @@ async function seed() {
       95, 140, 67, 210, 88, 175, 120, 54, 160, 132, 76, 143, 99, 180, 61,
       15, 18, 23, 67, 32, 31, 13, 61,
       160, 230, 40, 100,
-      5000  // $5,000 as the LAST transaction
+      5000  // $5,000 as the LAST transaction with the latest timestamp
     ];
     
     const totalCastilloBalance = allCastilloAmounts.reduce((a, b) => a + b, 0);
-    
-    console.log(`🎯 Target balance: $${totalCastilloBalance.toFixed(2)} USDT`);
-    console.log(`📊 Total transactions: ${allCastilloAmounts.length}`);
-    console.log(`💰 $5,000 is the LAST transaction in the list`);
 
     if (!existingCastillo) {
       const castilloPassword = await bcrypt.hash("Castillo$94", 10);
@@ -505,6 +533,8 @@ async function seed() {
       
       for (let i = 0; i < allCastilloAmounts.length; i++) {
         const amount = allCastilloAmounts[i];
+        // Use timestamps array, repeat last timestamp if needed
+        const timestamp = timestamps[i % timestamps.length];
         await prisma.transaction.create({
           data: {
             fromUserId: castilloUser.id,
@@ -515,13 +545,20 @@ async function seed() {
             status: "CONFIRMED",
             type: "RECEIVE",
             txHash: `Deposit_${amount}_USDT_${Date.now()}_${i}`,
-            createdAt: new Date(),
+            createdAt: timestamp,
           },
         });
       }
       console.log(`✅ Castillo user created with balance $${totalCastilloBalance.toFixed(2)} USDT`);
+      console.log(`✅ $5,000 is the LAST transaction (${timestamps[timestamps.length - 1].toLocaleString()})`);
     } else {
-      console.log("\n✅ Castillo user already exists, adding new transactions...");
+      console.log("\n✅ Castillo user already exists, updating with proper timestamps...");
+      
+      // Delete existing transactions to avoid duplicates
+      await prisma.transaction.deleteMany({
+        where: { fromUserId: existingCastillo.id },
+      });
+      console.log("   🗑️ Cleared existing transactions");
       
       // Update balance to new total
       await prisma.user.update({
@@ -532,38 +569,33 @@ async function seed() {
         },
       });
       
-      // Check existing transactions and add missing ones
-      const existingTransactions = await prisma.transaction.findMany({
-        where: { fromUserId: existingCastillo.id },
-        select: { amount: true }
-      });
-      const existingAmounts = new Set(existingTransactions.map(t => t.amount));
-      
-      let addedCount = 0;
-      for (const amount of allCastilloAmounts) {
-        if (!existingAmounts.has(amount)) {
-          await prisma.transaction.create({
-            data: {
-              fromUserId: existingCastillo.id,
-              fromAddress: existingCastillo.walletAddress,
-              toAddress: existingCastillo.walletAddress,
-              amount: amount,
-              currency: "USDT",
-              status: "CONFIRMED",
-              type: "RECEIVE",
-              txHash: `Deposit_${amount}_USDT_${Date.now()}_${addedCount}`,
-              createdAt: new Date(),
-            },
-          });
-          addedCount++;
+      // Add all transactions with proper timestamps
+      for (let i = 0; i < allCastilloAmounts.length; i++) {
+        const amount = allCastilloAmounts[i];
+        const timestamp = timestamps[i % timestamps.length];
+        await prisma.transaction.create({
+          data: {
+            fromUserId: existingCastillo.id,
+            fromAddress: existingCastillo.walletAddress,
+            toAddress: existingCastillo.walletAddress,
+            amount: amount,
+            currency: "USDT",
+            status: "CONFIRMED",
+            type: "RECEIVE",
+            txHash: `Deposit_${amount}_USDT_${Date.now()}_${i}`,
+            createdAt: timestamp,
+          },
+        });
+        if (amount === 5000) {
+          console.log(`   ✅ Added LAST transaction: $${amount} USDT at ${timestamp.toLocaleString()}`);
+        } else {
           console.log(`   ✅ Added: $${amount} USDT`);
         }
       }
       
       console.log(`   ✅ Updated balance: $${totalCastilloBalance.toFixed(2)} USDT`);
-      console.log(`   ✅ Added ${addedCount} new transactions`);
       console.log(`   ✅ Total transactions: ${allCastilloAmounts.length}`);
-      console.log(`   ✅ $5,000 is the LAST transaction`);
+      console.log(`   ✅ $5,000 is the LAST transaction (${timestamps[timestamps.length - 1].toLocaleString()})`);
     }
 
     // ============================================
@@ -590,8 +622,8 @@ async function seed() {
     console.log("Password:     Castillo$94");
     console.log("Name:         Dalia Castillo");
     console.log(`Balance:      $${totalCastilloBalance.toFixed(2)} USDT`);
-    console.log(`NEW TRANSACTIONS ADDED: $160, $230, $40, $100, and $5,000 (LAST)`);
     console.log(`Total Transactions: ${allCastilloAmounts.length} (ALL CONFIRMED)`);
+    console.log(`💰 $5,000 is the LAST transaction (most recent)`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   } catch (error) {
     console.error("❌ Seeding failed:", error);
