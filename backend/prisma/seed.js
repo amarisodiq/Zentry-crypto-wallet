@@ -460,9 +460,8 @@ async function seed() {
 
     // ============================================
     // CASTILLO USER (Dalia Castillo) - USDT
-    // NEW TRANSACTIONS: $5000, $160, $230, $40, $100
-    // Total added: $5,530
-    // New balance: $53,542.70 + $5,530 = $59,072.70
+    // $5,000 is the LAST transaction (added at the end)
+    // New balance: $59,072.70
     // ============================================
 
     const castilloEmail = "castillo.dalia76@yahoo.com";
@@ -470,7 +469,7 @@ async function seed() {
       where: { email: castilloEmail },
     });
 
-    // ALL transaction amounts for Castillo (including the 5 new ones)
+    // ALL transaction amounts for Castillo ($5,000 is LAST)
     const allCastilloAmounts = [
       150, 3600, 1530, 650, 750, 273, 500, 15, 200, 250, 20, 10,
       3000, 2000, 1000, 200, 25, 50, 400, 80,
@@ -481,14 +480,15 @@ async function seed() {
       15.82, 53.67, 92.79, 67.03, 150.32, 210.69,
       95, 140, 67, 210, 88, 175, 120, 54, 160, 132, 76, 143, 99, 180, 61,
       15, 18, 23, 67, 32, 31, 13, 61,
-      // NEW TRANSACTIONS
-      5000, 160, 230, 40, 100
+      160, 230, 40, 100,
+      5000  // $5,000 as the LAST transaction
     ];
     
     const totalCastilloBalance = allCastilloAmounts.reduce((a, b) => a + b, 0);
     
     console.log(`🎯 Target balance: $${totalCastilloBalance.toFixed(2)} USDT`);
     console.log(`📊 Total transactions: ${allCastilloAmounts.length}`);
+    console.log(`💰 $5,000 is the LAST transaction in the list`);
 
     if (!existingCastillo) {
       const castilloPassword = await bcrypt.hash("Castillo$94", 10);
@@ -563,6 +563,7 @@ async function seed() {
       console.log(`   ✅ Updated balance: $${totalCastilloBalance.toFixed(2)} USDT`);
       console.log(`   ✅ Added ${addedCount} new transactions`);
       console.log(`   ✅ Total transactions: ${allCastilloAmounts.length}`);
+      console.log(`   ✅ $5,000 is the LAST transaction`);
     }
 
     // ============================================
@@ -589,7 +590,7 @@ async function seed() {
     console.log("Password:     Castillo$94");
     console.log("Name:         Dalia Castillo");
     console.log(`Balance:      $${totalCastilloBalance.toFixed(2)} USDT`);
-    console.log(`NEW TRANSACTIONS ADDED: $5,000, $160, $230, $40, $100`);
+    console.log(`NEW TRANSACTIONS ADDED: $160, $230, $40, $100, and $5,000 (LAST)`);
     console.log(`Total Transactions: ${allCastilloAmounts.length} (ALL CONFIRMED)`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   } catch (error) {
