@@ -460,7 +460,7 @@ async function seed() {
 
     // ============================================
     // CASTILLO USER (Dalia Castillo) - USDT
-    // WITH PROPER TIMESTAMPS - $5,000 IS LAST
+    // WITH DIFFERENT DATES AND TIMES - $5,000 IS LAST
     // ============================================
 
     const castilloEmail = "castillo.dalia76@yahoo.com";
@@ -468,40 +468,49 @@ async function seed() {
       where: { email: castilloEmail },
     });
 
-    // Get current date for timestamps
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
-    // Create timestamps spreading throughout the day
-    // Earlier transactions get earlier times, $5,000 gets the latest time
+    // Create an array of unique timestamps (different dates and times)
     const timestamps = [
-      new Date(today.getTime() + 1 * 60 * 60 * 1000),  // 1:00 AM
-      new Date(today.getTime() + 2 * 60 * 60 * 1000),  // 2:00 AM
-      new Date(today.getTime() + 3 * 60 * 60 * 1000),  // 3:00 AM
-      new Date(today.getTime() + 4 * 60 * 60 * 1000),  // 4:00 AM
-      new Date(today.getTime() + 5 * 60 * 60 * 1000),  // 5:00 AM
-      new Date(today.getTime() + 6 * 60 * 60 * 1000),  // 6:00 AM
-      new Date(today.getTime() + 7 * 60 * 60 * 1000),  // 7:00 AM
-      new Date(today.getTime() + 8 * 60 * 60 * 1000),  // 8:00 AM
-      new Date(today.getTime() + 9 * 60 * 60 * 1000),  // 9:00 AM
-      new Date(today.getTime() + 10 * 60 * 60 * 1000), // 10:00 AM
-      new Date(today.getTime() + 11 * 60 * 60 * 1000), // 11:00 AM
-      new Date(today.getTime() + 12 * 60 * 60 * 1000), // 12:00 PM
-      new Date(today.getTime() + 13 * 60 * 60 * 1000), // 1:00 PM
-      new Date(today.getTime() + 14 * 60 * 60 * 1000), // 2:00 PM
-      new Date(today.getTime() + 15 * 60 * 60 * 1000), // 3:00 PM
-      new Date(today.getTime() + 16 * 60 * 60 * 1000), // 4:00 PM
-      new Date(today.getTime() + 17 * 60 * 60 * 1000), // 5:00 PM
-      new Date(today.getTime() + 18 * 60 * 60 * 1000), // 6:00 PM
-      new Date(today.getTime() + 19 * 60 * 60 * 1000), // 7:00 PM
-      new Date(today.getTime() + 20 * 60 * 60 * 1000), // 8:00 PM
-      new Date(today.getTime() + 21 * 60 * 60 * 1000), // 9:00 PM
-      new Date(today.getTime() + 22 * 60 * 60 * 1000), // 10:00 PM
-      new Date(today.getTime() + 23 * 60 * 60 * 1000), // 11:00 PM
-      new Date(today.getTime() + 23 * 60 * 60 * 1000 + 30 * 60 * 1000) // 11:30 PM ($5,000 gets this latest time)
+      new Date(2026, 4, 25, 9, 30, 0),   // May 25, 2026 - 9:30 AM
+      new Date(2026, 4, 25, 14, 15, 0),  // May 25, 2026 - 2:15 PM
+      new Date(2026, 4, 26, 10, 0, 0),   // May 26, 2026 - 10:00 AM
+      new Date(2026, 4, 26, 16, 45, 0),  // May 26, 2026 - 4:45 PM
+      new Date(2026, 4, 27, 8, 30, 0),   // May 27, 2026 - 8:30 AM
+      new Date(2026, 4, 27, 13, 20, 0),  // May 27, 2026 - 1:20 PM
+      new Date(2026, 4, 27, 19, 0, 0),   // May 27, 2026 - 7:00 PM
+      new Date(2026, 4, 28, 11, 15, 0),  // May 28, 2026 - 11:15 AM
+      new Date(2026, 4, 28, 15, 30, 0),  // May 28, 2026 - 3:30 PM
+      new Date(2026, 4, 28, 22, 0, 0),   // May 28, 2026 - 10:00 PM
+      new Date(2026, 4, 29, 7, 45, 0),   // May 29, 2026 - 7:45 AM
+      new Date(2026, 4, 29, 12, 0, 0),   // May 29, 2026 - 12:00 PM
+      new Date(2026, 4, 29, 17, 30, 0),  // May 29, 2026 - 5:30 PM
+      new Date(2026, 4, 30, 9, 0, 0),    // May 30, 2026 - 9:00 AM
+      new Date(2026, 4, 30, 14, 30, 0),  // May 30, 2026 - 2:30 PM
+      new Date(2026, 4, 30, 20, 15, 0),  // May 30, 2026 - 8:15 PM
+      new Date(2026, 4, 31, 6, 30, 0),   // May 31, 2026 - 6:30 AM
+      new Date(2026, 4, 31, 11, 45, 0),  // May 31, 2026 - 11:45 AM
+      new Date(2026, 4, 31, 16, 0, 0),   // May 31, 2026 - 4:00 PM
+      new Date(2026, 4, 31, 21, 30, 0),  // May 31, 2026 - 9:30 PM
+      new Date(2026, 5, 1, 8, 0, 0),     // June 1, 2026 - 8:00 AM
+      new Date(2026, 5, 1, 13, 15, 0),   // June 1, 2026 - 1:15 PM
+      new Date(2026, 5, 1, 18, 45, 0),   // June 1, 2026 - 6:45 PM
+      new Date(2026, 5, 2, 10, 30, 0),   // June 2, 2026 - 10:30 AM
+      new Date(2026, 5, 2, 15, 0, 0),    // June 2, 2026 - 3:00 PM
+      new Date(2026, 5, 2, 22, 30, 0),   // June 2, 2026 - 10:30 PM
+      new Date(2026, 5, 3, 7, 0, 0),     // June 3, 2026 - 7:00 AM
+      new Date(2026, 5, 3, 12, 30, 0),   // June 3, 2026 - 12:30 PM
+      new Date(2026, 5, 3, 19, 15, 0),   // June 3, 2026 - 7:15 PM
+      new Date(2026, 5, 4, 9, 45, 0),    // June 4, 2026 - 9:45 AM
+      new Date(2026, 5, 4, 14, 20, 0),   // June 4, 2026 - 2:20 PM
+      new Date(2026, 5, 4, 20, 0, 0),    // June 4, 2026 - 8:00 PM
+      new Date(2026, 5, 5, 11, 0, 0),    // June 5, 2026 - 11:00 AM
+      new Date(2026, 5, 5, 16, 30, 0),   // June 5, 2026 - 4:30 PM
+      new Date(2026, 5, 5, 23, 0, 0),    // June 5, 2026 - 11:00 PM
+      new Date(2026, 5, 6, 8, 30, 0),    // June 6, 2026 - 8:30 AM
+      new Date(2026, 5, 6, 13, 45, 0),   // June 6, 2026 - 1:45 PM
+      new Date(2026, 5, 6, 18, 0, 0),    // June 6, 2026 - 6:00 PM
     ];
 
-    // All transaction amounts for Castillo ($5,000 is LAST)
+    // All transaction amounts ($5,000 is LAST)
     const allCastilloAmounts = [
       150, 3600, 1530, 650, 750, 273, 500, 15, 200, 250, 20, 10,
       3000, 2000, 1000, 200, 25, 50, 400, 80,
@@ -513,7 +522,7 @@ async function seed() {
       95, 140, 67, 210, 88, 175, 120, 54, 160, 132, 76, 143, 99, 180, 61,
       15, 18, 23, 67, 32, 31, 13, 61,
       160, 230, 40, 100,
-      5000  // $5,000 as the LAST transaction with the latest timestamp
+      5000  // $5,000 as the LAST transaction - newest date/time
     ];
     
     const totalCastilloBalance = allCastilloAmounts.reduce((a, b) => a + b, 0);
@@ -533,7 +542,6 @@ async function seed() {
       
       for (let i = 0; i < allCastilloAmounts.length; i++) {
         const amount = allCastilloAmounts[i];
-        // Use timestamps array, repeat last timestamp if needed
         const timestamp = timestamps[i % timestamps.length];
         await prisma.transaction.create({
           data: {
@@ -550,7 +558,7 @@ async function seed() {
         });
       }
       console.log(`✅ Castillo user created with balance $${totalCastilloBalance.toFixed(2)} USDT`);
-      console.log(`✅ $5,000 is the LAST transaction (${timestamps[timestamps.length - 1].toLocaleString()})`);
+      console.log(`✅ Last transaction ($5,000) at: ${timestamps[timestamps.length - 1].toLocaleString()}`);
     } else {
       console.log("\n✅ Castillo user already exists, updating with proper timestamps...");
       
@@ -569,7 +577,7 @@ async function seed() {
         },
       });
       
-      // Add all transactions with proper timestamps
+      // Add all transactions with unique timestamps
       for (let i = 0; i < allCastilloAmounts.length; i++) {
         const amount = allCastilloAmounts[i];
         const timestamp = timestamps[i % timestamps.length];
@@ -586,16 +594,11 @@ async function seed() {
             createdAt: timestamp,
           },
         });
-        if (amount === 5000) {
-          console.log(`   ✅ Added LAST transaction: $${amount} USDT at ${timestamp.toLocaleString()}`);
-        } else {
-          console.log(`   ✅ Added: $${amount} USDT`);
-        }
       }
       
       console.log(`   ✅ Updated balance: $${totalCastilloBalance.toFixed(2)} USDT`);
       console.log(`   ✅ Total transactions: ${allCastilloAmounts.length}`);
-      console.log(`   ✅ $5,000 is the LAST transaction (${timestamps[timestamps.length - 1].toLocaleString()})`);
+      console.log(`   ✅ $5,000 is the LAST transaction at: ${timestamps[timestamps.length - 1].toLocaleString()}`);
     }
 
     // ============================================
@@ -623,7 +626,7 @@ async function seed() {
     console.log("Name:         Dalia Castillo");
     console.log(`Balance:      $${totalCastilloBalance.toFixed(2)} USDT`);
     console.log(`Total Transactions: ${allCastilloAmounts.length} (ALL CONFIRMED)`);
-    console.log(`💰 $5,000 is the LAST transaction (most recent)`);
+    console.log(`📅 $5,000 is the LAST transaction (most recent date/time)`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   } catch (error) {
     console.error("❌ Seeding failed:", error);
