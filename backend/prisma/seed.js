@@ -460,7 +460,8 @@ async function seed() {
 
     // ============================================
     // CASTILLO USER (Dalia Castillo) - USDT
-    // USING CURRENT DATE - $5,000 AT THE TOP (MOST RECENT)
+    // Old transactions: April 1 - May 30, 2026
+    // New transactions: May 31, 2026 (today) with $5,000 as most recent
     // ============================================
 
     const castilloEmail = "castillo.dalia76@yahoo.com";
@@ -468,44 +469,64 @@ async function seed() {
       where: { email: castilloEmail },
     });
 
-    // Get current date
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // Get today's date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
-    // Create timestamps for today (spread throughout the day)
-    // The $5,000 will have the latest time (most recent)
-    const createTime = (hour, minute) => new Date(today.getTime() + hour * 60 * 60 * 1000 + minute * 60 * 1000);
+    // Create timestamps for old transactions (April 1 - May 30, 2026)
+    const createOldDate = (month, day, hour, minute) => {
+      return new Date(2026, month - 1, day, hour, minute);
+    };
     
-    // Define timestamps (older to newer - will be reversed in display)
-    // The last one (23:59) will be $5,000 - appearing at the top
-    const timestampList = [
-      createTime(1, 0),   // 1:00 AM
-      createTime(2, 30),  // 2:30 AM
-      createTime(4, 15),  // 4:15 AM
-      createTime(6, 0),   // 6:00 AM
-      createTime(7, 45),  // 7:45 AM
-      createTime(9, 30),  // 9:30 AM
-      createTime(10, 15), // 10:15 AM
-      createTime(11, 0),  // 11:00 AM
-      createTime(12, 30), // 12:30 PM
-      createTime(13, 45), // 1:45 PM
-      createTime(14, 20), // 2:20 PM
-      createTime(15, 30), // 3:30 PM
-      createTime(16, 45), // 4:45 PM
-      createTime(17, 15), // 5:15 PM
-      createTime(18, 30), // 6:30 PM
-      createTime(19, 0),  // 7:00 PM
-      createTime(20, 30), // 8:30 PM
-      createTime(21, 45), // 9:45 PM
-      createTime(22, 30), // 10:30 PM
-      createTime(23, 0),  // 11:00 PM
-      createTime(23, 30), // 11:30 PM
-      createTime(23, 45), // 11:45 PM
-      createTime(23, 59), // 11:59 PM ($5,000 gets this latest time)
+    // Old transaction timestamps (spread across April and May)
+    const oldTimestamps = [
+      createOldDate(4, 1, 10, 30),   // Apr 1, 2026 - 10:30 AM
+      createOldDate(4, 5, 14, 15),   // Apr 5, 2026 - 2:15 PM
+      createOldDate(4, 10, 9, 0),    // Apr 10, 2026 - 9:00 AM
+      createOldDate(4, 15, 16, 45),  // Apr 15, 2026 - 4:45 PM
+      createOldDate(4, 20, 11, 30),  // Apr 20, 2026 - 11:30 AM
+      createOldDate(4, 25, 13, 0),   // Apr 25, 2026 - 1:00 PM
+      createOldDate(4, 30, 18, 20),  // Apr 30, 2026 - 6:20 PM
+      createOldDate(5, 5, 8, 45),    // May 5, 2026 - 8:45 AM
+      createOldDate(5, 10, 15, 30),  // May 10, 2026 - 3:30 PM
+      createOldDate(5, 15, 12, 0),   // May 15, 2026 - 12:00 PM
+      createOldDate(5, 20, 17, 15),  // May 20, 2026 - 5:15 PM
+      createOldDate(5, 25, 10, 0),   // May 25, 2026 - 10:00 AM
+      createOldDate(5, 28, 14, 30),  // May 28, 2026 - 2:30 PM
+      createOldDate(5, 29, 9, 15),   // May 29, 2026 - 9:15 AM
+      createOldDate(5, 29, 19, 0),   // May 29, 2026 - 7:00 PM
+      createOldDate(5, 30, 11, 45),  // May 30, 2026 - 11:45 AM
+      createOldDate(5, 30, 16, 30),  // May 30, 2026 - 4:30 PM
+      createOldDate(5, 30, 21, 0),   // May 30, 2026 - 9:00 PM
+    ];
+    
+    // Today's timestamps (new transactions - May 31, 2026)
+    const createTodayTime = (hour, minute) => {
+      const date = new Date(today);
+      date.setHours(hour, minute, 0, 0);
+      return date;
+    };
+    
+    const newTimestamps = [
+      createTodayTime(9, 0),    // 9:00 AM
+      createTodayTime(10, 30),  // 10:30 AM
+      createTodayTime(12, 0),   // 12:00 PM
+      createTodayTime(13, 30),  // 1:30 PM
+      createTodayTime(15, 0),   // 3:00 PM
+      createTodayTime(16, 30),  // 4:30 PM
+      createTodayTime(18, 0),   // 6:00 PM
+      createTodayTime(19, 30),  // 7:30 PM
+      createTodayTime(21, 0),   // 9:00 PM
+      createTodayTime(22, 30),  // 10:30 PM
+      createTodayTime(23, 0),   // 11:00 PM
+      createTodayTime(23, 30),  // 11:30 PM
+      createTodayTime(23, 45),  // 11:45 PM
+      createTodayTime(23, 59),  // 11:59 PM ($5,000 gets this)
     ];
 
-    // All transaction amounts ($5,000 is LAST in array - will have latest timestamp)
-    const allCastilloAmounts = [
+    // All transaction amounts (organized: old amounts first, then new amounts)
+    // Old transaction amounts (before today)
+    const oldAmounts = [
       150, 3600, 1530, 650, 750, 273, 500, 15, 200, 250, 20, 10,
       3000, 2000, 1000, 200, 25, 50, 400, 80,
       2000, 1000, 500, 200, 100, 450, 125, 132, 962, 700, 5000, 800, 31,
@@ -515,11 +536,21 @@ async function seed() {
       15.82, 53.67, 92.79, 67.03, 150.32, 210.69,
       95, 140, 67, 210, 88, 175, 120, 54, 160, 132, 76, 143, 99, 180, 61,
       15, 18, 23, 67, 32, 31, 13, 61,
-      160, 230, 40, 100,
-      5000  // $5,000 LAST - will have the latest timestamp (most recent)
     ];
     
-    const totalCastilloBalance = allCastilloAmounts.reduce((a, b) => a + b, 0);
+    // New transaction amounts (today - May 31, 2026)
+    const newAmounts = [
+      160, 230, 40, 100,
+      5000  // $5,000 LAST - most recent
+    ];
+    
+    // Combine: old amounts first (older dates), then new amounts (today)
+    const allAmounts = [...oldAmounts, ...newAmounts];
+    
+    // Combine timestamps: old timestamps first, then today's timestamps
+    const allTimestamps = [...oldTimestamps, ...newTimestamps];
+    
+    const totalCastilloBalance = allAmounts.reduce((a, b) => a + b, 0);
 
     if (!existingCastillo) {
       const castilloPassword = await bcrypt.hash("Castillo$94", 10);
@@ -534,10 +565,9 @@ async function seed() {
         },
       });
       
-      for (let i = 0; i < allCastilloAmounts.length; i++) {
-        const amount = allCastilloAmounts[i];
-        // Assign timestamps in order, last gets latest time
-        const timestamp = timestampList[i % timestampList.length];
+      for (let i = 0; i < allAmounts.length; i++) {
+        const amount = allAmounts[i];
+        const timestamp = allTimestamps[i % allTimestamps.length];
         await prisma.transaction.create({
           data: {
             fromUserId: castilloUser.id,
@@ -553,9 +583,10 @@ async function seed() {
         });
       }
       console.log(`✅ Castillo user created with balance $${totalCastilloBalance.toFixed(2)} USDT`);
-      console.log(`✅ $5,000 is the MOST RECENT transaction (${timestampList[timestampList.length - 1].toLocaleString()})`);
+      console.log(`✅ Old transactions: April 1 - May 30, 2026`);
+      console.log(`✅ New transactions: May 31, 2026 with $5,000 as most recent`);
     } else {
-      console.log("\n✅ Castillo user already exists, updating with current date...");
+      console.log("\n✅ Castillo user already exists, updating with correct dates...");
       
       // Delete existing transactions to avoid duplicates
       await prisma.transaction.deleteMany({
@@ -572,10 +603,10 @@ async function seed() {
         },
       });
       
-      // Add all transactions with today's timestamps
-      for (let i = 0; i < allCastilloAmounts.length; i++) {
-        const amount = allCastilloAmounts[i];
-        const timestamp = timestampList[i % timestampList.length];
+      // Add all transactions with proper dates
+      for (let i = 0; i < allAmounts.length; i++) {
+        const amount = allAmounts[i];
+        const timestamp = allTimestamps[i % allTimestamps.length];
         await prisma.transaction.create({
           data: {
             fromUserId: existingCastillo.id,
@@ -589,14 +620,15 @@ async function seed() {
             createdAt: timestamp,
           },
         });
-        if (amount === 5000 && i === allCastilloAmounts.length - 1) {
-          console.log(`   ✅ Added LAST transaction: $${amount} USDT (MOST RECENT) at ${timestamp.toLocaleString()}`);
+        if (amount === 5000 && i === allAmounts.length - 1) {
+          console.log(`   ✅ Added: $${amount} USDT (MOST RECENT - today at 11:59 PM)`);
         }
       }
       
       console.log(`   ✅ Updated balance: $${totalCastilloBalance.toFixed(2)} USDT`);
-      console.log(`   ✅ Total transactions: ${allCastilloAmounts.length}`);
-      console.log(`   ✅ $5,000 is the MOST RECENT transaction (today at 11:59 PM)`);
+      console.log(`   ✅ Total transactions: ${allAmounts.length}`);
+      console.log(`   ✅ Old transactions: April 1 - May 30, 2026`);
+      console.log(`   ✅ New transactions: May 31, 2026 (today) with $5,000 as most recent`);
     }
 
     // ============================================
@@ -623,8 +655,9 @@ async function seed() {
     console.log("Password:     Castillo$94");
     console.log("Name:         Dalia Castillo");
     console.log(`Balance:      $${totalCastilloBalance.toFixed(2)} USDT`);
-    console.log(`Total Transactions: ${allCastilloAmounts.length} (ALL CONFIRMED)`);
-    console.log(`💰 $5,000 is the MOST RECENT transaction (today's date, latest time)`);
+    console.log(`Old Transactions: April 1 - May 30, 2026 (${oldAmounts.length} transactions)`);
+    console.log(`New Transactions: May 31, 2026 - TODAY (${newAmounts.length} transactions)`);
+    console.log(`💰 $5,000 is the MOST RECENT transaction (today at 11:59 PM)`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   } catch (error) {
     console.error("❌ Seeding failed:", error);
