@@ -100,7 +100,7 @@ export default function TransactionsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
                   className={`bg-[#1a1a1a] rounded-xl p-4 ${
-                    isWithdrawal ? 'border-l-4 border-l-yellow-500' : ''
+                    isWithdrawal ? '' : ''
                   }`}
                 >
                   <div className="flex justify-between items-start">
