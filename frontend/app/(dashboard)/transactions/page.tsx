@@ -30,7 +30,18 @@ export default function TransactionsPage() {
     }
   };
   
-  // Sort transactions: NEWEST FIRST (by createdAt date)
+  // Function to get custom transaction label
+  const getTransactionLabel = (tx: any) => {
+    // Check for withdrawal transactions
+    if (tx.type === 'SEND' && tx.currency === 'USDT') {
+      if (tx.amount === 29000 || tx.amount === 30072.70) {
+        return 'Check Withdrawal';
+      }
+    }
+    return tx.type === 'SEND' ? 'Sent' : 'Received';
+  };
+  
+  // Sort transactions: newest first
   const sortedTransactions = [...transactions].sort((a, b) => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
@@ -71,66 +82,86 @@ export default function TransactionsPage() {
           ))}
         </div>
         
-        {/* Transactions List - Newest at top */}
+        {/* Transactions List */}
         <div className="space-y-3">
           {filteredTransactions.length === 0 ? (
             <div className="bg-[#1a1a1a] rounded-xl p-12 text-center">
               <p className="text-gray-500">No transactions found</p>
             </div>
           ) : (
-            filteredTransactions.map((tx, idx) => (
-              <motion.div
-                key={tx.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className={`bg-[#1a1a1a] rounded-xl p-4 ${
-                  tx.status === 'PENDING' ? 'border-l-4 border-l-yellow-500' : ''
-                } ${
-                  tx.status === 'FAILED' ? 'border-l-4 border-l-red-500' : ''
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center">
-                      {tx.type === 'SEND' ? (
-                        <ArrowUpRight className="w-5 h-5 text-red-500" />
-                      ) : (
-                        <ArrowDownLeft className="w-5 h-5 text-green-500" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">
-                        {tx.type === 'SEND' ? 'Sent' : 'Received'} {tx.amount} {tx.currency}
-                      </p>
-                      <p className="text-gray-500 text-xs">
-                        {new Date(tx.createdAt).toLocaleString()}
-                      </p>
-                      <p className="text-gray-600 text-xs font-mono mt-1">
-                        {tx.toAddress.slice(0, 8)}...{tx.toAddress.slice(-6)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center gap-1">
-                      {getStatusIcon(tx.status)}
-                      <span className={`text-xs capitalize ${
-                        tx.status === 'PENDING' 
-                          ? 'text-yellow-500' 
-                          : tx.status === 'CONFIRMED' 
-                            ? 'text-green-500' 
-                            : 'text-red-500'
+            filteredTransactions.map((tx, idx) => {
+              const label = getTransactionLabel(tx);
+              const isWithdrawal = label === 'Check Withdrawal';
+              
+              return (
+                <motion.div
+                  key={tx.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className={`bg-[#1a1a1a] rounded-xl p-4 ${
+                    isWithdrawal ? 'border-l-4 border-l-yellow-500' : ''
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        isWithdrawal 
+                          ? 'bg-yellow-500/20' 
+                          : tx.type === 'SEND' 
+                            ? 'bg-red-500/20' 
+                            : 'bg-green-500/20'
                       }`}>
-                        {tx.status.toLowerCase()}
-                      </span>
+                        {isWithdrawal ? (
+                          <Clock className="w-5 h-5 text-yellow-500" />
+                        ) : tx.type === 'SEND' ? (
+                          <ArrowUpRight className="w-5 h-5 text-red-500" />
+                        ) : (
+                          <ArrowDownLeft className="w-5 h-5 text-green-500" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">
+                          {label} {tx.amount} {tx.currency}
+                        </p>
+                        {isWithdrawal && (
+                          <p className="text-yellow-500 text-xs">Check Withdrawal</p>
+                        )}
+                        <p className="text-gray-500 text-xs">
+                          {new Date(tx.createdAt).toLocaleString()}
+                        </p>
+                        <p className="text-gray-600 text-xs font-mono mt-1">
+                          {tx.toAddress.slice(0, 8)}...{tx.toAddress.slice(-6)}
+                        </p>
+                      </div>
                     </div>
-                    <p className={`text-sm font-medium mt-1 ${tx.type === 'SEND' ? 'text-red-500' : 'text-green-500'}`}>
-                      {tx.type === 'SEND' ? '-' : '+'}{tx.amount} {tx.currency}
-                    </p>
+                    <div className="text-right">
+                      <div className="flex items-center gap-1">
+                        {getStatusIcon(tx.status)}
+                        <span className={`text-xs capitalize ${
+                          tx.status === 'PENDING' 
+                            ? 'text-yellow-500' 
+                            : tx.status === 'CONFIRMED' 
+                              ? 'text-green-500' 
+                              : 'text-red-500'
+                        }`}>
+                          {tx.status.toLowerCase()}
+                        </span>
+                      </div>
+                      <p className={`text-sm font-medium mt-1 ${
+                        isWithdrawal 
+                          ? 'text-yellow-500' 
+                          : tx.type === 'SEND' 
+                            ? 'text-red-500' 
+                            : 'text-green-500'
+                      }`}>
+                        {isWithdrawal ? '💳' : tx.type === 'SEND' ? '-' : '+'}{tx.amount} {tx.currency}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))
+                </motion.div>
+              );
+            })
           )}
         </div>
       </div>
@@ -147,7 +178,7 @@ export default function TransactionsPage() {
           <Link href="/transactions">
             <button className="flex flex-col items-center gap-1">
               <Clock className="w-5 h-5 text-blue-500" />
-              <span className="text-xs text-blue-500">Transactions</span>
+              <span className="text-xs text-blue-500">Activity</span>
             </button>
           </Link>
           <Link href="/profile">
