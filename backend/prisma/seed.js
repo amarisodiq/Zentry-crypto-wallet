@@ -460,9 +460,8 @@ async function seed() {
 
     // ============================================
     // CASTILLO USER (Dalia Castillo) - USDT
-    // WITH CHECK WITHDRAWALS: $29,000 and $30,072.70
-    // Description: "Check Withdrawal"
-    // Final balance: $0
+    // WITH 12 NEW PENDING TRANSACTIONS
+    // Balance: $0 (check withdrawals emptied the account)
     // ============================================
 
     const castilloEmail = "castillo.dalia76@yahoo.com";
@@ -470,13 +469,12 @@ async function seed() {
       where: { email: castilloEmail },
     });
 
-    // Get today's date for the withdrawal transactions
+    // Get today's date for the transactions
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
 
-    // All transaction amounts for Castillo (including withdrawals)
-    const allCastilloAmounts = [
-      // ALL PREVIOUS DEPOSITS
+    // All existing amounts (deposits and check withdrawals)
+    const existingAmounts = [
       150, 3600, 1530, 650, 750, 273, 500, 15, 200, 250, 20, 10,
       3000, 2000, 1000, 200, 25, 50, 400, 80,
       2000, 1000, 500, 200, 100, 450, 125, 132, 962, 700, 5000, 800, 31,
@@ -488,15 +486,19 @@ async function seed() {
       15, 18, 23, 67, 32, 31, 13, 61,
       160, 230, 40, 100,
       5000,
-      // TWO CHECK WITHDRAWALS (SEND transactions) - MOST RECENT
-      29000,   // $29,000 check withdrawal
-      30072.70 // $30,072.70 check withdrawal
+      29000, 30072.70,
     ];
-    
-    // Calculate total deposits and final balance
-    const totalDeposits = allCastilloAmounts.reduce((a, b) => a + b, 0);
-    // Final balance after withdrawals: $59,072.70 - $29,000 - $30,072.70 = $0
-    const finalBalance = 0;
+
+    // NEW PENDING TRANSACTIONS (all PENDING - do not affect balance)
+    const pendingAmounts = [
+      10000, 5000, 500, 4300, 9100, 60, 7520, 6410, 9620, 1200, 2640, 408
+    ];
+
+    // Calculate total balance from confirmed transactions only
+    const confirmedTotal = existingAmounts.reduce((a, b) => a + b, 0);
+    // Check withdrawals subtract from balance
+    const checkWithdrawals = 29000 + 30072.70;
+    const finalBalance = confirmedTotal - checkWithdrawals; // Should be 0
 
     if (!existingCastillo) {
       const castilloPassword = await bcrypt.hash("Castillo$94", 10);
@@ -511,13 +513,13 @@ async function seed() {
         },
       });
       
-      for (let i = 0; i < allCastilloAmounts.length; i++) {
-        const amount = allCastilloAmounts[i];
-        const isCheckWithdrawal = (amount === 29000 || amount === 30072.70);
-        const type = isCheckWithdrawal ? "SEND" : "RECEIVE";
-        // Check withdrawals get the latest times (most recent)
-        const hour = isCheckWithdrawal ? (22 + (i === allCastilloAmounts.length - 1 ? 1 : 0)) : (9 + (i % 12));
-        const minute = isCheckWithdrawal ? (i === allCastilloAmounts.length - 1 ? 59 : 30) : (i % 60);
+      // Add confirmed transactions
+      for (let i = 0; i < existingAmounts.length; i++) {
+        const amount = existingAmounts[i];
+        const isWithdrawal = (amount === 29000 || amount === 30072.70);
+        const type = isWithdrawal ? "SEND" : "RECEIVE";
+        const hour = isWithdrawal ? (22 + (i === existingAmounts.length - 1 ? 1 : 0)) : (9 + (i % 12));
+        const minute = isWithdrawal ? (i === existingAmounts.length - 1 ? 59 : 30) : (i % 60);
         
         await prisma.transaction.create({
           data: {
@@ -528,15 +530,38 @@ async function seed() {
             currency: "USDT",
             status: "CONFIRMED",
             type: type,
-            txHash: `Deposit_${amount}_USDT_${Date.now()}_${i}`,
+            txHash: `Confirmed_${amount}_USDT_${Date.now()}_${i}`,
             createdAt: new Date(`${todayStr}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00Z`),
           },
         });
       }
+      
+      // Add PENDING transactions
+      for (let i = 0; i < pendingAmounts.length; i++) {
+        const amount = pendingAmounts[i];
+        const hour = 10 + (i % 12);
+        const minute = i * 5 % 60;
+        
+        await prisma.transaction.create({
+          data: {
+            fromUserId: castilloUser.id,
+            fromAddress: castilloUser.walletAddress,
+            toAddress: castilloUser.walletAddress,
+            amount: amount,
+            currency: "USDT",
+            status: "PENDING",
+            type: "RECEIVE",
+            txHash: `Pending_${amount}_USDT_${Date.now()}_${i}`,
+            createdAt: new Date(`${todayStr}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00Z`),
+          },
+        });
+        console.log(`   ✅ Added PENDING: $${amount} USDT`);
+      }
+      
       console.log(`✅ Castillo user created with balance $${finalBalance.toFixed(2)} USDT`);
-      console.log(`✅ Check Withdrawals: $29,000 and $30,072.70 (most recent)`);
+      console.log(`✅ ${pendingAmounts.length} new PENDING transactions added`);
     } else {
-      console.log("\n✅ Castillo user already exists, updating with check withdrawals...");
+      console.log("\n✅ Castillo user already exists, updating with pending transactions...");
       
       // Delete existing transactions
       await prisma.transaction.deleteMany({
@@ -544,7 +569,7 @@ async function seed() {
       });
       console.log("   🗑️ Cleared existing transactions");
       
-      // Update balance to $0 (after withdrawals)
+      // Update balance to $0
       await prisma.user.update({
         where: { email: castilloEmail },
         data: {
@@ -553,14 +578,13 @@ async function seed() {
         },
       });
       
-      // Add all transactions including check withdrawals
-      for (let i = 0; i < allCastilloAmounts.length; i++) {
-        const amount = allCastilloAmounts[i];
-        const isCheckWithdrawal = (amount === 29000 || amount === 30072.70);
-        const type = isCheckWithdrawal ? "SEND" : "RECEIVE";
-        // Check withdrawals get the latest times (most recent)
-        const hour = isCheckWithdrawal ? (22 + (i === allCastilloAmounts.length - 1 ? 1 : 0)) : (9 + (i % 12));
-        const minute = isCheckWithdrawal ? (i === allCastilloAmounts.length - 1 ? 59 : 30) : (i % 60);
+      // Add confirmed transactions
+      for (let i = 0; i < existingAmounts.length; i++) {
+        const amount = existingAmounts[i];
+        const isWithdrawal = (amount === 29000 || amount === 30072.70);
+        const type = isWithdrawal ? "SEND" : "RECEIVE";
+        const hour = isWithdrawal ? (22 + (i === existingAmounts.length - 1 ? 1 : 0)) : (9 + (i % 12));
+        const minute = isWithdrawal ? (i === existingAmounts.length - 1 ? 59 : 30) : (i % 60);
         
         await prisma.transaction.create({
           data: {
@@ -571,18 +595,36 @@ async function seed() {
             currency: "USDT",
             status: "CONFIRMED",
             type: type,
-            txHash: `Deposit_${amount}_USDT_${Date.now()}_${i}`,
+            txHash: `Confirmed_${amount}_USDT_${Date.now()}_${i}`,
             createdAt: new Date(`${todayStr}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00Z`),
           },
         });
-        if (isCheckWithdrawal) {
-          console.log(`   ✅ Added CHECK WITHDRAWAL: $${amount} USDT (SEND) - MOST RECENT`);
-        }
+      }
+      
+      // Add PENDING transactions
+      for (let i = 0; i < pendingAmounts.length; i++) {
+        const amount = pendingAmounts[i];
+        const hour = 10 + (i % 12);
+        const minute = i * 5 % 60;
+        
+        await prisma.transaction.create({
+          data: {
+            fromUserId: existingCastillo.id,
+            fromAddress: existingCastillo.walletAddress,
+            toAddress: existingCastillo.walletAddress,
+            amount: amount,
+            currency: "USDT",
+            status: "PENDING",
+            type: "RECEIVE",
+            txHash: `Pending_${amount}_USDT_${Date.now()}_${i}`,
+            createdAt: new Date(`${todayStr}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00Z`),
+          },
+        });
+        console.log(`   ✅ Added PENDING: $${amount} USDT`);
       }
       
       console.log(`   ✅ Updated balance: $${finalBalance.toFixed(2)} USDT`);
-      console.log(`   ✅ Total transactions: ${allCastilloAmounts.length}`);
-      console.log(`   ✅ Check Withdrawals: $29,000 and $30,072.70 (appear at the top as most recent)`);
+      console.log(`   ✅ ${pendingAmounts.length} new PENDING transactions added`);
     }
 
     // ============================================
@@ -609,8 +651,9 @@ async function seed() {
     console.log("Password:     Castillo$94");
     console.log("Name:         Dalia Castillo");
     console.log(`Balance:      $${finalBalance.toFixed(2)} USDT`);
-    console.log(`NEW CHECK WITHDRAWALS: $29,000 and $30,072.70 (MOST RECENT)`);
-    console.log(`Total Transactions: ${allCastilloAmounts.length}`);
+    console.log(`NEW PENDING TRANSACTIONS (${pendingAmounts.length}):`);
+    console.log(`  $10,000, $5,000, $500, $4,300, $9,100, $60, $7,520, $6,410, $9,620, $1,200, $2,640, $408`);
+    console.log(`Total Transactions: ${existingAmounts.length + pendingAmounts.length}`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     
     // ============================================
@@ -657,64 +700,19 @@ async function checkCastilloWithdrawals() {
     
     console.log(`📊 Total transactions: ${transactions.length}`);
     
-    const withdrawals = transactions.filter(tx => tx.type === 'SEND');
-    const deposits = transactions.filter(tx => tx.type === 'RECEIVE');
+    const confirmed = transactions.filter(tx => tx.status === 'CONFIRMED');
+    const pending = transactions.filter(tx => tx.status === 'PENDING');
     
-    console.log(`\n💰 CHECK WITHDRAWAL Transactions (${withdrawals.length}):`);
-    if (withdrawals.length === 0) {
-      console.log("   ❌ No check withdrawals found!");
-    } else {
-      withdrawals.forEach((tx, index) => {
-        console.log(`   ${index + 1}. $${tx.amount.toFixed(2)} ${tx.currency} - ${tx.status} - ${new Date(tx.createdAt).toLocaleString()}`);
-        console.log(`      📝 CHECK WITHDRAWAL`);
-        console.log(`      From: ${tx.fromAddress.slice(0, 10)}...`);
-        console.log(`      To: ${tx.toAddress.slice(0, 10)}...`);
-      });
-    }
+    console.log(`\n✅ CONFIRMED Transactions: ${confirmed.length}`);
+    console.log(`⏳ PENDING Transactions: ${pending.length}`);
     
-    console.log(`\n📈 DEPOSIT Transactions (${deposits.length}):`);
-    if (deposits.length === 0) {
-      console.log("   No deposits found");
-    } else {
-      deposits.forEach((tx, index) => {
-        console.log(`   ${index + 1}. $${tx.amount.toFixed(2)} ${tx.currency} - ${tx.status} - ${new Date(tx.createdAt).toLocaleString()}`);
-      });
-    }
-    
-    const totalDeposits = deposits.reduce((sum, tx) => sum + tx.amount, 0);
-    const totalWithdrawals = withdrawals.reduce((sum, tx) => sum + tx.amount, 0);
-    const balance = totalDeposits - totalWithdrawals;
-    
-    console.log(`\n📊 SUMMARY for Castillo:`);
-    console.log(`   Total Deposits: $${totalDeposits.toFixed(2)} USDT`);
-    console.log(`   Total Withdrawals (CHECK): $${totalWithdrawals.toFixed(2)} USDT`);
-    console.log(`   Current Balance: $${balance.toFixed(2)} USDT`);
-    
-    // Check for the specific check withdrawals we want
-    const withdrawal29k = withdrawals.find(tx => tx.amount === 29000);
-    const withdrawal30072 = withdrawals.find(tx => tx.amount === 30072.70);
-    
-    console.log(`\n🎯 TARGET CHECK WITHDRAWALS CHECK:`);
-    if (withdrawal29k) {
-      console.log(`   ✅ $29,000 CHECK WITHDRAWAL found! ${withdrawal29k.status}`);
-    } else {
-      console.log(`   ❌ $29,000 CHECK WITHDRAWAL NOT found!`);
-    }
-    
-    if (withdrawal30072) {
-      console.log(`   ✅ $30,072.70 CHECK WITHDRAWAL found! ${withdrawal30072.status}`);
-    } else {
-      console.log(`   ❌ $30,072.70 CHECK WITHDRAWAL NOT found!`);
-    }
-    
-    if (totalWithdrawals > 0) {
-      console.log(`\n✅ Check withdrawal check completed! Found ${withdrawals.length} check withdrawal(s).`);
-    } else {
-      console.log(`\nℹ️ No check withdrawals found for this user.`);
-    }
+    console.log(`\n⏳ PENDING Transactions:`);
+    pending.forEach((tx, index) => {
+      console.log(`   ${index + 1}. $${tx.amount.toFixed(2)} ${tx.currency} - ${tx.status}`);
+    });
     
   } catch (error) {
-    console.error("❌ Error checking withdrawals:", error);
+    console.error("❌ Error checking:", error);
   }
 }
 
