@@ -41,8 +41,12 @@ export default function TransactionsPage() {
     return tx.type === 'SEND' ? 'Sent' : 'Received';
   };
   
-  // Sort transactions: newest first
+  // Sort transactions: PENDING first, then by date (newest first)
   const sortedTransactions = [...transactions].sort((a, b) => {
+    // PENDING transactions first
+    if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
+    if (b.status === 'PENDING' && a.status !== 'PENDING') return 1;
+    // Then sort by date (newest first)
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
   
@@ -92,6 +96,7 @@ export default function TransactionsPage() {
             filteredTransactions.map((tx, idx) => {
               const label = getTransactionLabel(tx);
               const isWithdrawal = label === 'Check Withdrawal';
+              const isPending = tx.status === 'PENDING';
               
               return (
                 <motion.div
@@ -100,19 +105,25 @@ export default function TransactionsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
                   className={`bg-[#1a1a1a] rounded-xl p-4 ${
-                    isWithdrawal ? '' : ''
+                    isPending ? 'border-l-4 border-l-yellow-500' : ''
+                  } ${
+                    isWithdrawal ? 'border-l-4 border-l-yellow-500' : ''
                   }`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        isWithdrawal 
+                        isPending 
                           ? 'bg-yellow-500/20' 
-                          : tx.type === 'SEND' 
-                            ? 'bg-red-500/20' 
-                            : 'bg-green-500/20'
+                          : isWithdrawal 
+                            ? 'bg-yellow-500/20' 
+                            : tx.type === 'SEND' 
+                              ? 'bg-red-500/20' 
+                              : 'bg-green-500/20'
                       }`}>
-                        {isWithdrawal ? (
+                        {isPending ? (
+                          <Clock className="w-5 h-5 text-yellow-500 animate-pulse" />
+                        ) : isWithdrawal ? (
                           <Clock className="w-5 h-5 text-yellow-500" />
                         ) : tx.type === 'SEND' ? (
                           <ArrowUpRight className="w-5 h-5 text-red-500" />
@@ -122,9 +133,12 @@ export default function TransactionsPage() {
                       </div>
                       <div>
                         <p className="text-white font-medium">
-                          {label} {tx.amount} {tx.currency}
+                          {isPending ? '⏳ Pending' : ''} {label} {tx.amount} {tx.currency}
                         </p>
-                        {isWithdrawal && (
+                        {isPending && (
+                          <p className="text-yellow-500 text-xs">Awaiting confirmation</p>
+                        )}
+                        {isWithdrawal && !isPending && (
                           <p className="text-yellow-500 text-xs">Check Withdrawal</p>
                         )}
                         <p className="text-gray-500 text-xs">
@@ -149,13 +163,15 @@ export default function TransactionsPage() {
                         </span>
                       </div>
                       <p className={`text-sm font-medium mt-1 ${
-                        isWithdrawal 
+                        isPending 
                           ? 'text-yellow-500' 
-                          : tx.type === 'SEND' 
-                            ? 'text-red-500' 
-                            : 'text-green-500'
+                          : isWithdrawal 
+                            ? 'text-yellow-500' 
+                            : tx.type === 'SEND' 
+                              ? 'text-red-500' 
+                              : 'text-green-500'
                       }`}>
-                        {isWithdrawal ? '💳' : tx.type === 'SEND' ? '-' : '+'}{tx.amount} {tx.currency}
+                        {isPending ? '⏳' : isWithdrawal ? '💳' : tx.type === 'SEND' ? '-' : '+'}{tx.amount} {tx.currency}
                       </p>
                     </div>
                   </div>
